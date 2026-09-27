@@ -85,6 +85,49 @@
   .bigbtn.math{background:#FFE9C7;}
   .bigbtn.word{background:#D6F0FF;}
   .bigbtn.logic{background:#E4F3D8;}
+  .bigbtn.clock{background:#FFD9EC;}
+  .bigbtn.world{background:#D9FFE3;}
+  .bigbtn.discover{background:#E6E0FF;}
+  .bigbtn.build{background:#FFF0C2;}
+
+  .missioncard{
+    background:var(--white); border-radius:22px; padding:14px 16px; margin-bottom:14px;
+    box-shadow:0 5px 0 rgba(0,0,0,.08);
+  }
+  .missioncard h3{margin:0 0 8px; font-size:15px; text-align:center;}
+  .missionlist{display:flex; flex-direction:column; gap:6px; margin-bottom:8px;}
+  .missionitem{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--ink-soft);}
+  .missionitem.done{color:var(--leaf-dark);}
+  .missionitem .chk{font-size:18px; flex:none;}
+  .missionclaim{
+    width:100%; background:var(--sun); border:none; border-radius:16px; padding:10px;
+    font-size:15px; font-weight:800; color:var(--ink); box-shadow:0 4px 0 var(--sun-dark); cursor:pointer;
+  }
+  .missionclaim:active{transform:translateY(3px); box-shadow:0 1px 0 var(--sun-dark);}
+  .missionclaim:disabled{background:var(--lock); box-shadow:0 4px 0 #a89f92; opacity:.7; cursor:default;}
+
+  .badgegrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:10px;}
+  .badgecell{
+    background:var(--white); border-radius:18px; padding:14px 6px; text-align:center;
+    box-shadow:0 4px 0 rgba(0,0,0,.08); font-size:32px;
+  }
+  .badgecell.locked{filter:grayscale(1); opacity:.5;}
+  .badgecell .nm{display:block; font-size:11px; font-weight:700; margin-top:6px; color:var(--ink-soft);}
+
+  .palettegrid{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:10px 0 16px;}
+  .paletteitem{
+    background:var(--white); border:3px solid #EDE6D8; border-radius:16px; width:56px; height:56px;
+    font-size:28px; box-shadow:0 4px 0 rgba(0,0,0,.06); cursor:pointer;
+  }
+  .paletteitem:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.06);}
+  .buildisland{
+    background:linear-gradient(180deg,#BFEFD9,#9FE0C2);
+    border-radius:28px; padding:18px; min-height:180px;
+    display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px;
+    box-shadow:inset 0 0 0 4px #ffffffaa; font-size:30px; margin-bottom:14px;
+  }
+  .buildtoolrow{display:flex; gap:10px;}
+  .buildtoolrow .nextbtn{flex:1;}
 
   .rowbtns{display:flex; gap:10px;}
   .rowbtns .bigbtn{flex:1; flex-direction:column; text-align:center; padding:16px 8px;}
@@ -283,16 +326,53 @@
 
     <div class="island" id="island"></div>
 
+    <div class="missioncard">
+      <h3>🌞 きょうの ぼうけん</h3>
+      <div class="missionlist" id="missionList"></div>
+      <button class="missionclaim" id="btnMissionClaim">🎁 スペシャルたからばこを もらう</button>
+    </div>
+
     <div class="gamegrid">
       <button class="bigbtn math" data-game="math"><span class="emoji">🔢</span><span class="txt">かずのぼうけん<small>かぞえる・たしざん・ひきざん</small></span></button>
       <button class="bigbtn word" data-game="word"><span class="emoji">🔤</span><span class="txt">ことばのぼうけん<small>ひらがな・ことば・ぶんしょう</small></span></button>
       <button class="bigbtn logic" data-game="logic"><span class="emoji">🧩</span><span class="txt">ひらめきぼうけん<small>みつける・おぼえる・きまり</small></span></button>
+      <button class="bigbtn clock" data-game="clock"><span class="emoji">🕐</span><span class="txt">とけいのぼうけん<small>なんじ・はりあわせ・けいさん</small></span></button>
+      <button class="bigbtn world" data-game="world"><span class="emoji">🌎</span><span class="txt">せかいのぼうけん<small>どうぶつ・きせつ・にほん</small></span></button>
+      <button class="bigbtn discover" data-game="discover"><span class="emoji">🔬</span><span class="txt">はっけんぼうけん<small>「なぜ？」を たのしもう</small></span></button>
+      <button class="bigbtn build" id="btnBuildGame"><span class="emoji">🎨</span><span class="txt">つくろうぼうけん<small>じぶんの しまを つくろう</small></span></button>
     </div>
 
     <div class="smallrow">
       <button class="bigbtn" id="btnChest"><span class="emoji">🎁</span><span class="txt">たからばこ</span></button>
       <button class="bigbtn" id="btnBook2"><span class="emoji">📖</span><span class="txt">ぼうけん図鑑</span></button>
+      <button class="bigbtn" id="btnBadges"><span class="emoji">🏆</span><span class="txt">バッジ</span></button>
     </div>
+  </section>
+
+  <!-- つくろうぼうけん（自由あそび） -->
+  <section class="screen" id="screen-buildgame">
+    <div class="topbar">
+      <button class="iconbtn" id="btnBuildGameHome">🏠</button>
+      <h2 style="margin:0;">🎨 つくろうぼうけん</h2>
+      <span style="width:44px;"></span>
+    </div>
+    <p class="sub">すきなものを タップして、しまに おいてみよう！</p>
+    <div class="buildisland" id="buildIsland"></div>
+    <div class="palettegrid" id="paletteGrid"></div>
+    <div class="buildtoolrow">
+      <button class="iconbtn" id="btnBuildUndo" title="ひとつ もどす">↺</button>
+      <button class="nextbtn" id="btnBuildDone">🏝️ できた！</button>
+    </div>
+  </section>
+
+  <!-- バッジ一覧 -->
+  <section class="screen" id="screen-badges">
+    <div class="topbar">
+      <button class="iconbtn" id="btnBadgesBack">◀️</button>
+      <h2 style="margin:0;">🏆 バッジ</h2>
+      <span style="width:44px;"></span>
+    </div>
+    <div class="badgegrid" id="badgeGrid"></div>
   </section>
 
   <!-- 3. ゲーム画面 -->
@@ -417,6 +497,39 @@ var TREASURES = [
   {key:"castle", emoji:"🏰", name:"おしろ"}
 ];
 
+var RARE_TREASURES = [
+  {key:"rainbow", emoji:"🌈", name:"にじ"},
+  {key:"diamond", emoji:"💎", name:"だいや"},
+  {key:"crown",   emoji:"👑", name:"かんむり"},
+  {key:"star2",   emoji:"🌟", name:"きらきらぼし"}
+];
+var ALL_TREASURES = TREASURES.concat(RARE_TREASURES);
+
+var BADGES = [
+  {key:"first",       icon:"🥉", name:"はじめての ぼうけん", check:function(c){ return c.stars>=1; }},
+  {key:"star10",      icon:"⭐", name:"10こ あつめた！",      check:function(c){ return c.stars>=10; }},
+  {key:"mathmaster",  icon:"🏆", name:"かずの たつじん",      check:function(c){ return (c.roundsCleared.math||0)>=10; }},
+  {key:"wordmaster",  icon:"🔤", name:"ことばゲーム名人",     check:function(c){ return (c.roundsCleared.word||0)>=10; }},
+  {key:"logicmaster", icon:"🧠", name:"ひらめき名人",         check:function(c){ return (c.roundsCleared.logic||0)>=10; }},
+  {key:"clockmaster", icon:"🕐", name:"とけい博士",           check:function(c){ return (c.roundsCleared.clock||0)>=10; }},
+  {key:"islandmaster",icon:"🏝️", name:"島づくり名人",         check:function(c){ return (c.islandPlacedTotal||0)>=20; }}
+];
+function checkBadges(){
+  if(!state.child) return;
+  if(!state.child.badges) state.child.badges = {};
+  var newlyEarned = [];
+  BADGES.forEach(function(b){
+    if(!state.child.badges[b.key] && b.check(state.child)){
+      state.child.badges[b.key] = true;
+      newlyEarned.push(b);
+    }
+  });
+  if(newlyEarned.length>0){
+    saveChild();
+    toast("🏆 バッジ「"+newlyEarned[0].name+"」を かくとく！");
+  }
+}
+
 var GOOD_WORDS = ["せいかい！","すごい！","やったね！","ばっちり！","そのとおり！","かんぺき！"];
 var SOFT_WORDS = ["おしい！もういっかい！","もうすこし！","おしい！つぎいこう！","ちかい！もういっかい！"];
 
@@ -440,16 +553,24 @@ function todayStr(){
   var d = new Date();
   return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 }
+var QUIZ_GAMES = ["math","word","logic","clock","world","discover"];
+var MISSION_GAMES = ["math","word","logic"];
+
 function defaultChild(id){
   return {
     name: id==="child1" ? "おねえちゃん" : "おとうと・いもうと",
     isSetup: false,
     stars: 0,
-    levels: {math:1, word:1, logic:1},
-    correctInLevel: {math:0, word:0, logic:0},
+    levels: {math:1, word:1, logic:1, clock:1, world:1, discover:1},
+    correctInLevel: {math:0, word:0, logic:0, clock:0, world:0, discover:0},
+    roundsCleared: {math:0, word:0, logic:0, clock:0, world:0, discover:0},
     items: [],
     book: {},
-    today: {date: todayStr(), usedMs:0, limitReached:false, extendCount:0}
+    badges: {},
+    myIsland: [],
+    islandPlacedTotal: 0,
+    today: {date: todayStr(), usedMs:0, limitReached:false, extendCount:0,
+      missions:{math:false, word:false, logic:false}, missionClaimed:false}
   };
 }
 function loadChild(id){
@@ -469,11 +590,23 @@ function loadChild(id){
   if(hadRaw && c.isSetup === undefined) c.isSetup = true;
   if(!c.levels) c.levels = def.levels;
   if(!c.correctInLevel) c.correctInLevel = def.correctInLevel;
+  if(!c.roundsCleared) c.roundsCleared = {};
+  if(!c.badges) c.badges = {};
+  if(!c.myIsland) c.myIsland = [];
+  if(c.islandPlacedTotal === undefined) c.islandPlacedTotal = 0;
+  QUIZ_GAMES.forEach(function(g){
+    if(c.levels[g] === undefined) c.levels[g] = 1;
+    if(c.correctInLevel[g] === undefined) c.correctInLevel[g] = 0;
+    if(c.roundsCleared[g] === undefined) c.roundsCleared[g] = 0;
+  });
   if(!c.today) c.today = def.today;
   if(c.today.extendCount === undefined) c.today.extendCount = 0;
+  if(!c.today.missions) c.today.missions = {math:false, word:false, logic:false};
+  if(c.today.missionClaimed === undefined) c.today.missionClaimed = false;
   // 日付が変わっていたら今日の利用時間だけリセット（星やアイテムは保持）
   if(c.today.date !== todayStr()){
-    c.today = {date: todayStr(), usedMs:0, limitReached:false, extendCount:0};
+    c.today = {date: todayStr(), usedMs:0, limitReached:false, extendCount:0,
+      missions:{math:false, word:false, logic:false}, missionClaimed:false};
   }
   return c;
 }
@@ -668,12 +801,14 @@ document.getElementById("btnSetupStart").addEventListener("click", function(){
   var c = loadChild(pendingSetupId);
   c.name = nameVal.slice(0,10);
   c.isSetup = true;
-  c.levels = {
-    math: initialUnlockCount("math", pendingSetupLevel),
-    word: initialUnlockCount("word", pendingSetupLevel),
-    logic: initialUnlockCount("logic", pendingSetupLevel)
-  };
-  c.correctInLevel = {math:0, word:0, logic:0};
+  c.levels = {};
+  c.correctInLevel = {};
+  c.roundsCleared = {};
+  QUIZ_GAMES.forEach(function(g){
+    c.levels[g] = initialUnlockCount(g, pendingSetupLevel);
+    c.correctInLevel[g] = 0;
+    c.roundsCleared[g] = 0;
+  });
 
   state.childId = pendingSetupId;
   state.child = c;
@@ -764,10 +899,56 @@ function renderHome(){
   island.innerHTML = "";
   var seed = document.createElement("span"); seed.textContent = "🌱"; island.appendChild(seed);
   state.child.items.forEach(function(key){
-    var t = TREASURES.find(function(x){return x.key===key;});
+    var t = ALL_TREASURES.find(function(x){return x.key===key;});
     if(t){ var s = document.createElement("span"); s.textContent = t.emoji; island.appendChild(s); }
   });
+  (state.child.myIsland||[]).forEach(function(emoji){
+    var s2 = document.createElement("span"); s2.textContent = emoji; island.appendChild(s2);
+  });
+  renderMissions();
 }
+var MISSION_LABELS = {math:"🔢 かずゲームを 1かい", word:"🔤 ことばゲームを 1かい", logic:"🧩 ひらめきゲームを 1かい"};
+function renderMissions(){
+  var list = document.getElementById("missionList");
+  list.innerHTML = "";
+  var m = state.child.today.missions;
+  var allDone = true;
+  MISSION_GAMES.forEach(function(g){
+    var done = !!m[g];
+    if(!done) allDone = false;
+    var row = document.createElement("div");
+    row.className = "missionitem" + (done?" done":"");
+    row.innerHTML = "<span class='chk'>"+(done?"✅":"⬜")+"</span><span>"+MISSION_LABELS[g]+"</span>";
+    list.appendChild(row);
+  });
+  var btn = document.getElementById("btnMissionClaim");
+  if(state.child.today.missionClaimed){
+    btn.disabled = true;
+    btn.textContent = "🎁 きょうは もう もらったよ！";
+  } else if(allDone){
+    btn.disabled = false;
+    btn.textContent = "🎁 スペシャルたからばこを もらう";
+  } else {
+    btn.disabled = true;
+    btn.textContent = "🎁 ぜんぶ クリアすると もらえるよ";
+  }
+}
+document.getElementById("btnMissionClaim").addEventListener("click", function(){
+  if(!state.child || state.child.today.missionClaimed) return;
+  var allDone = MISSION_GAMES.every(function(g){ return state.child.today.missions[g]; });
+  if(!allDone) return;
+  state.child.today.missionClaimed = true;
+  state.child.stars += 3;
+  var t = pick(RARE_TREASURES);
+  state.child.items.push(t.key);
+  state.child.book[t.key] = true;
+  saveChild();
+  document.getElementById("homeStars").textContent = state.child.stars;
+  document.getElementById("revealItem").textContent = t.emoji;
+  document.getElementById("revealName").textContent = t.name;
+  showScreen("screen-reveal");
+  checkBadges();
+});
 document.querySelectorAll(".bigbtn[data-game]").forEach(function(btn){
   btn.addEventListener("click", function(){ enterGame(btn.getAttribute("data-game")); });
 });
@@ -783,7 +964,7 @@ document.getElementById("btnChestBack").addEventListener("click", goHome);
 function openBook(){
   var grid = document.getElementById("bookGrid");
   grid.innerHTML = "";
-  TREASURES.forEach(function(t){
+  ALL_TREASURES.forEach(function(t){
     var got = !!state.child.book[t.key];
     var cell = document.createElement("div");
     cell.className = "bookcell" + (got?"":" locked");
@@ -792,6 +973,71 @@ function openBook(){
   });
   showScreen("screen-book");
 }
+document.getElementById("btnBadges").addEventListener("click", openBadges);
+document.getElementById("btnBadgesBack").addEventListener("click", goHome);
+function openBadges(){
+  var grid = document.getElementById("badgeGrid");
+  grid.innerHTML = "";
+  BADGES.forEach(function(b){
+    var got = !!(state.child.badges && state.child.badges[b.key]);
+    var cell = document.createElement("div");
+    cell.className = "badgecell" + (got?"":" locked");
+    cell.innerHTML = (got? b.icon : "🔒") + "<span class='nm'>" + (got? b.name : "？？？") + "</span>";
+    grid.appendChild(cell);
+  });
+  showScreen("screen-badges");
+}
+
+/* ================= つくろうぼうけん（じゆう あそび） ================= */
+var BUILD_PALETTE = ["🏠","🌳","🌷","🐶","🚗","🌈","☀️","🐦","⛲","🦋","🍎","🎪"];
+var MAX_MY_ISLAND = 40;
+document.getElementById("btnBuildGame").addEventListener("click", openBuildGame);
+document.getElementById("btnBuildGameHome").addEventListener("click", goHome);
+function openBuildGame(){
+  var pal = document.getElementById("paletteGrid");
+  pal.innerHTML = "";
+  BUILD_PALETTE.forEach(function(emoji){
+    var b = document.createElement("button");
+    b.className = "paletteitem";
+    b.textContent = emoji;
+    b.addEventListener("click", function(){ placeOnMyIsland(emoji); });
+    pal.appendChild(b);
+  });
+  renderBuildIsland();
+  showScreen("screen-buildgame");
+}
+function renderBuildIsland(){
+  var wrap = document.getElementById("buildIsland");
+  wrap.innerHTML = "";
+  if(state.child.myIsland.length===0){
+    var seed = document.createElement("span"); seed.textContent = "🌱"; wrap.appendChild(seed);
+  }
+  state.child.myIsland.forEach(function(emoji){
+    var s = document.createElement("span"); s.textContent = emoji; wrap.appendChild(s);
+  });
+}
+function placeOnMyIsland(emoji){
+  if(state.child.myIsland.length >= MAX_MY_ISLAND){
+    toast("しまが いっぱいだよ！");
+    return;
+  }
+  state.child.myIsland.push(emoji);
+  state.child.islandPlacedTotal = (state.child.islandPlacedTotal||0) + 1;
+  saveChild();
+  renderBuildIsland();
+  checkBadges();
+}
+document.getElementById("btnBuildUndo").addEventListener("click", function(){
+  if(state.child.myIsland.length===0) return;
+  state.child.myIsland.pop();
+  saveChild();
+  renderBuildIsland();
+});
+document.getElementById("btnBuildDone").addEventListener("click", function(){
+  toast("🏝️ ぼくの しまが できた！");
+  goHome();
+});
+
 function openChest(){
   var grid = document.getElementById("chestGrid");
   grid.innerHTML = "";
@@ -802,7 +1048,7 @@ function openChest(){
     grid.appendChild(p);
   } else {
     state.child.items.forEach(function(key){
-      var t = TREASURES.find(function(x){return x.key===key;});
+      var t = ALL_TREASURES.find(function(x){return x.key===key;});
       if(!t) return;
       var d = document.createElement("div");
       d.className = "chestitem";
@@ -814,7 +1060,10 @@ function openChest(){
 }
 
 /* ================= 出題ロジック ================= */
-var CATEGORY_TITLES = {math:"🔢 かずのぼうけん", word:"🔤 ことばのぼうけん", logic:"🧩 ひらめきぼうけん"};
+var CATEGORY_TITLES = {
+  math:"🔢 かずのぼうけん", word:"🔤 ことばのぼうけん", logic:"🧩 ひらめきぼうけん",
+  clock:"🕐 とけいのぼうけん", world:"🌎 せかいのぼうけん", discover:"🔬 はっけんぼうけん"
+};
 var GAME_DEFS = {
   math: [
     {key:"count", icon:"🔢", title:"かぞえてみよう"},
@@ -834,6 +1083,24 @@ var GAME_DEFS = {
     {key:"memory",   icon:"🧠", title:"おぼえてね"},
     {key:"category", icon:"🍽️", title:"なかまはずれ"},
     {key:"pattern",  icon:"🔮", title:"つぎはなに？"}
+  ],
+  clock: [
+    {key:"read1", icon:"🕐", title:"なんじ？（ちょうど）"},
+    {key:"read2", icon:"🕝", title:"なんじ？（はん）"},
+    {key:"set",   icon:"🛠️", title:"とけいを あわせよう"},
+    {key:"calc",  icon:"⏳", title:"あと なんぷん？"}
+  ],
+  world: [
+    {key:"animal", icon:"🐘", title:"どうぶつ はかせ"},
+    {key:"flower", icon:"🌸", title:"はなと きせつ"},
+    {key:"season", icon:"☀️", title:"きせつクイズ"},
+    {key:"japan",  icon:"🗾", title:"にほんの こと"}
+  ],
+  discover: [
+    {key:"grow",    icon:"🌱", title:"そだつ ふしぎ"},
+    {key:"weather", icon:"🌈", title:"おてんき ふしぎ"},
+    {key:"body",    icon:"💧", title:"みのまわりの ふしぎ"},
+    {key:"space",   icon:"🌙", title:"そらの ふしぎ"}
   ]
 };
 function initialUnlockCount(category, diffLevel){
@@ -1078,11 +1345,143 @@ function genLogicGame(key){
   return genLogicPattern();
 }
 
+/* ---- ④ とけいのぼうけん ---- */
+var CLOCK_O = ["🕛","🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚"]; // index = hour%12 (0=12じ)
+var CLOCK_H = ["🕧","🕜","🕝","🕞","🕟","🕠","🕡","🕢","🕣","🕤","🕥","🕦"]; // 30ふん版
+function clockOEmoji(h){ return CLOCK_O[h%12]; }
+function clockHEmoji(h){ return CLOCK_H[h%12]; }
+function genClockRead1(){
+  var h = Math.floor(Math.random()*12)+1;
+  var opts = uniqueOptions(h,1,12,3).map(function(v){return v+"じ";});
+  return {visual: clockOEmoji(h), prompt:"なんじ？", options: opts, correct: h+"じ"};
+}
+function genClockRead2(){
+  var h = Math.floor(Math.random()*12)+1;
+  var opts = uniqueOptions(h,1,12,3).map(function(v){return v+"じ30ぷん";});
+  return {visual: clockHEmoji(h), prompt:"なんじ？", options: opts, correct: h+"じ30ぷん"};
+}
+function genClockSet(){
+  var h = Math.floor(Math.random()*12)+1;
+  var half = Math.random()<0.5;
+  var correctEmoji = half ? clockHEmoji(h) : clockOEmoji(h);
+  var pool = half ? CLOCK_H : CLOCK_O;
+  var distractors = shuffle(pool.filter(function(e){return e!==correctEmoji;})).slice(0,2);
+  var opts = shuffle([correctEmoji, distractors[0], distractors[1]]);
+  var label = half ? (h+"じ30ぷん") : (h+"じ");
+  return {visual:"🕐➡❓", prompt: label+"に して！", options: opts, correct: correctEmoji, grid4:true};
+}
+function genClockCalc(){
+  var mode = Math.floor(Math.random()*3);
+  var targetH = Math.floor(Math.random()*11)+2; // 2〜12
+  var curH, curMin, remain;
+  if(mode===0){ curH = targetH-1; curMin=30; remain=30; }
+  else if(mode===1){ curH = targetH-1; curMin=0; remain=60; }
+  else { curH = targetH-2; curMin=30; remain=90; }
+  if(curH<1) curH+=12;
+  var curLabel = curH+"じ"+(curMin===30?"30ぷん":"");
+  var opts = uniqueOptions(remain,10,120,3).map(function(v){return v+"ふん";});
+  return {visual: (curMin===30?clockHEmoji(curH):clockOEmoji(curH))+" → "+clockOEmoji(targetH),
+    prompt: targetH+"じに でかけます。いまは "+curLabel+"です。あと なんぷん？",
+    options: opts, correct: remain+"ふん"};
+}
+function genClockGame(key){
+  if(key==="read1") return genClockRead1();
+  if(key==="read2") return genClockRead2();
+  if(key==="set") return genClockSet();
+  return genClockCalc();
+}
+
+/* ---- ⑤ せかいのぼうけん ---- */
+var WORLD_ANIMALS = [
+  {e:"🐘",name:"ぞう"},{e:"🦒",name:"きりん"},{e:"🦁",name:"らいおん"},
+  {e:"🐼",name:"ぱんだ"},{e:"🐧",name:"ぺんぎん"},{e:"🐳",name:"くじら"},
+  {e:"🦓",name:"しまうま"},{e:"🐨",name:"こあら"}
+];
+var WORLD_FLOWER_Q = [
+  {q:"はるに さく はなは どれ？", correct:"🌸", wrong:["🌻","⛄","🍁"]},
+  {q:"なつに さく はなは どれ？", correct:"🌻", wrong:["🌸","☃️","🍂"]},
+  {q:"あきに みることが おおい ものは どれ？", correct:"🍁", wrong:["🌸","🌻","❄️"]},
+  {q:"ふゆに ふる、しろくて つめたいものは？", correct:"❄️", wrong:["🌸","🌻","🍁"]}
+];
+var WORLD_SEASON_Q = [
+  {q:"あつい きせつは いつ？", correct:"なつ", wrong:["ふゆ","はる","あき"]},
+  {q:"さむい きせつは いつ？", correct:"ふゆ", wrong:["なつ","はる","あき"]},
+  {q:"はなみが たのしい きせつは いつ？", correct:"はる", wrong:["なつ","ふゆ","あき"]},
+  {q:"おちばが みえる きせつは いつ？", correct:"あき", wrong:["なつ","はる","ふゆ"]}
+];
+var WORLD_FLAGS = [
+  {e:"🇯🇵",name:"にほん"},{e:"🇺🇸",name:"あめりか"},{e:"🇫🇷",name:"ふらんす"},{e:"🇰🇷",name:"かんこく"}
+];
+function genWorldAnimal(){
+  var item = pick(WORLD_ANIMALS);
+  var distractors = shuffle(WORLD_ANIMALS.filter(function(x){return x.name!==item.name;})).slice(0,2);
+  var opts = shuffle([item.name, distractors[0].name, distractors[1].name]);
+  return {visual: item.e, prompt:"これは なんの どうぶつ？", options: opts, correct: item.name};
+}
+function genWorldFlower(){
+  var q = pick(WORLD_FLOWER_Q);
+  var opts = shuffle([q.correct].concat(shuffle(q.wrong).slice(0,2)));
+  return {visual:"🌼", prompt: q.q, options: opts, correct: q.correct};
+}
+function genWorldSeason(){
+  var q = pick(WORLD_SEASON_Q);
+  var opts = shuffle([q.correct].concat(shuffle(q.wrong).slice(0,2)));
+  return {visual:"🗓️", prompt: q.q, options: opts, correct: q.correct};
+}
+function genWorldJapan(){
+  var correct = WORLD_FLAGS[0];
+  var distractors = shuffle(WORLD_FLAGS.slice(1)).slice(0,2);
+  var opts = shuffle([correct.e, distractors[0].e, distractors[1].e]);
+  return {visual:"🗾", prompt:"にほんの こっきは どれ？", options: opts, correct: correct.e};
+}
+function genWorldGame(key){
+  if(key==="animal") return genWorldAnimal();
+  if(key==="flower") return genWorldFlower();
+  if(key==="season") return genWorldSeason();
+  return genWorldJapan();
+}
+
+/* ---- ⑥ はっけんぼうけん ---- */
+var DISCOVER_GROW = [
+  {visual:"🌱 → 🌿 → ❓", q:"つぎに なるのは どれ？", correct:"🌳", wrong:["🍎","🐛","🔥"]},
+  {visual:"🥚 → 🐛 → ❓", q:"つぎに なるのは どれ？", correct:"🦋", wrong:["🐦","🐟","🐸"]},
+  {visual:"🌰 → 🌱 → ❓", q:"たねの つぎは どうなる？", correct:"🌳", wrong:["🍄","🪨","💧"]}
+];
+var DISCOVER_WEATHER = [
+  {visual:"☀️ → 🌧️ → ❓", q:"あめの あとに みえることが あるのは？", correct:"🌈", wrong:["⚡","❄️","🌪️"]},
+  {visual:"❄️ → ☀️ → ❓", q:"ゆきが あたたまると どうなる？", correct:"💧", wrong:["🔥","🍚","🪨"]},
+  {visual:"💧 → 🔥 → ❓", q:"みずを あたためると どうなる？", correct:"♨️", wrong:["❄️","🧊","🪨"]}
+];
+var DISCOVER_BODY = [
+  {visual:"🧊 → 🔥 → ❓", q:"こおりを あたためると どうなる？", correct:"💧", wrong:["🍚","🪨","🔥"]},
+  {visual:"💧 → ❄️ → ❓", q:"みずを ひやすと どうなる？", correct:"🧊", wrong:["♨️","🍚","🔥"]},
+  {visual:"🍽️", q:"ごはんを たべる まえに することは？", correct:"🧼て を あらう", wrong:["🛏️ ねる","📺 みる","🎮 あそぶ"]}
+];
+var DISCOVER_SPACE = [
+  {visual:"☀️", q:"たいようが でて あかるいのは いつ？", correct:"あさ", wrong:["よる","まよなか"]},
+  {visual:"🌙⭐", q:"つきや ほしが みえるのは いつ？", correct:"よる", wrong:["あさ","ひる"]},
+  {visual:"🌍", q:"わたしたちが すんでいる ほしは どれ？", correct:"🌍", wrong:["🌕","☀️","⭐"]}
+];
+function fromPool(pool, visualDefault){
+  var q = pick(pool);
+  var opts = shuffle([q.correct].concat(shuffle(q.wrong).slice(0,2)));
+  return {visual: q.visual || visualDefault, prompt: q.q, options: opts, correct: q.correct};
+}
+function genDiscoverGame(key){
+  if(key==="grow") return fromPool(DISCOVER_GROW);
+  if(key==="weather") return fromPool(DISCOVER_WEATHER);
+  if(key==="body") return fromPool(DISCOVER_BODY);
+  return fromPool(DISCOVER_SPACE);
+}
+
 function genQuestion(category, idx){
   var def = GAME_DEFS[category][idx-1];
   if(category==="math") return genMathGame(def.key);
   if(category==="word") return genWordGame(def.key);
-  return genLogicGame(def.key);
+  if(category==="logic") return genLogicGame(def.key);
+  if(category==="clock") return genClockGame(def.key);
+  if(category==="world") return genWorldGame(def.key);
+  return genDiscoverGame(def.key);
 }
 
 /* ================= ゲーム画面 制御 ================= */
@@ -1172,6 +1571,7 @@ function renderOptions(){
 function awardCorrect(){
   state.child.stars += 1;
   document.getElementById("gameStars").textContent = state.child.stars;
+  checkBadges();
 
   var lv = state.level, g = state.game;
   var catLen = GAME_DEFS[g].length;
@@ -1274,6 +1674,15 @@ document.getElementById("btnBuildReset").addEventListener("click", resetBuildAtt
 function showClear(){
   var starDisp = "⭐".repeat(Math.min(5, state.roundCorrect));
   document.getElementById("clearStars").textContent = starDisp;
+  if(state.child){
+    if(!state.child.roundsCleared) state.child.roundsCleared = {};
+    state.child.roundsCleared[state.game] = (state.child.roundsCleared[state.game]||0) + 1;
+    if(MISSION_GAMES.indexOf(state.game)!==-1){
+      state.child.today.missions[state.game] = true;
+    }
+    saveChild();
+    checkBadges();
+  }
   showScreen("screen-clear");
 }
 document.getElementById("btnOpenChest").addEventListener("click", function(){
