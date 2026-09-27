@@ -42,15 +42,21 @@
 
   /* top timer bar */
   #timerbar{
-    display:none; align-items:center; justify-content:center; gap:8px;
-    padding:8px 14px; margin:0 0 6px; border-radius:999px;
+    display:none; align-items:center; gap:6px;
+    padding:6px 8px 6px 14px; margin:8px 14px 6px auto; border-radius:999px;
     background:var(--white); box-shadow:0 3px 0 rgba(0,0,0,.08);
-    font-weight:700; font-size:15px; color:var(--ink); width:max-content; margin-left:auto; margin-right:auto;
+    font-weight:700; font-size:14px; color:var(--ink); width:max-content;
   }
   #timerbar.show{display:flex;}
-  #timerbar .clock{font-size:18px;}
+  #timerbar .clock{font-size:17px;}
   #timerbar.warn{background:#FFE7D6; color:var(--coral-dark);}
   #timerbar.danger{background:#FFD9CF; color:#D8503A;}
+  .extendbtn{
+    background:var(--sun); border:none; border-radius:999px; width:30px; height:30px;
+    font-size:16px; font-weight:900; color:var(--ink); box-shadow:0 3px 0 var(--sun-dark); cursor:pointer; flex:none;
+  }
+  .extendbtn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--sun-dark);}
+  .extendbtn:disabled{background:var(--lock); box-shadow:0 3px 0 #a89f92; opacity:.7; cursor:default;}
 
   .toast{
     position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-20px);
@@ -116,13 +122,24 @@
   .smallrow .bigbtn{font-size:16px; padding:14px;}
 
   /* question screen */
-  .levelrow{display:flex; gap:8px; justify-content:center; margin-bottom:10px;}
+  .subgametitle{text-align:center; font-size:14px; font-weight:800; color:var(--ink-soft); margin:-2px 0 8px;}
+  .levelrow{display:flex; gap:8px; justify-content:center; margin-bottom:10px; flex-wrap:wrap;}
   .levelchip{
     border:none; border-radius:14px; padding:8px 10px; font-size:20px; background:var(--white);
     box-shadow:0 4px 0 rgba(0,0,0,.08); opacity:.5; cursor:default;
   }
   .levelchip.unlocked{opacity:1; cursor:pointer;}
   .levelchip.current{background:var(--sun); box-shadow:0 4px 0 var(--sun-dark);}
+
+  .buildarea{display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .buildslots{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .buildslot{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:44px; height:52px; border-radius:12px; background:var(--white);
+    border:3px solid #EDE6D8; font-size:24px; font-weight:800; box-shadow:0 4px 0 rgba(0,0,0,.06);
+  }
+  .buildtiles{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .tilebtn{font-size:22px; padding:12px 16px; min-width:52px;}
 
   .qcard{
     background:var(--white); border-radius:26px; padding:22px 16px; text-align:center;
@@ -181,13 +198,35 @@
   .homefoot{margin-top:auto; display:flex; gap:10px; padding-top:8px;}
   .namepencil{font-size:13px; color:var(--ink-soft); text-align:center; margin-top:2px; text-decoration:underline; cursor:pointer;}
 
+  /* setup screen */
+  .setupavatar{font-size:64px; text-align:center;}
+  .setupblock{width:100%; max-width:340px;}
+  .setuplabel{font-size:15px; font-weight:800; color:var(--ink-soft); text-align:center; margin:0 0 8px;}
+  .nameinput{
+    width:100%; font-size:20px; font-weight:800; text-align:center; color:var(--ink);
+    border:3px solid #EDE6D8; border-radius:18px; padding:14px; background:var(--white);
+    box-shadow:0 4px 0 rgba(0,0,0,.06);
+  }
+  .nameinput:focus{outline:none; border-color:var(--sun-dark);}
+  .difficultygrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .diffcard{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:var(--white); border:3px solid #EDE6D8; border-radius:18px; padding:14px 6px;
+    cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.06);
+  }
+  .diffcard .dicon{font-size:28px;}
+  .diffcard .dtitle{font-size:14px; font-weight:800;}
+  .diffcard .ddesc{font-size:11px; color:var(--ink-soft);}
+  .diffcard.sel{border-color:var(--leaf); background:#EAFBE6;}
+  .diffcard:active{transform:translateY(3px);}
+
   @media (prefers-color-scheme: dark){ /* keep bright/consistent for kids regardless of system theme */ }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <div id="timerbar"><span>のこり</span><span class="clock" id="clockText">15:00</span></div>
+  <div id="timerbar"><span>のこり</span><span class="clock" id="clockText">15:00</span><button class="extendbtn" id="btnExtend">➕</button></div>
   <div class="toast" id="toast"></div>
 
   <!-- 1. プロフィール選択 -->
@@ -197,9 +236,38 @@
       <p class="sub">あそんで、あつめて、いつのまにかできる！</p>
       <h2>だれが あそぶ？</h2>
       <div class="profilewrap">
-        <button class="profilebtn" data-child="child1"><span class="emoji">👧</span><span id="pname1">おねえちゃん</span></button>
-        <button class="profilebtn" data-child="child2"><span class="emoji">👦</span><span id="pname2">おとうと・いもうと</span></button>
+        <button class="profilebtn" data-child="child1"><span class="emoji">👧</span><span id="pname1">とうろく する</span></button>
+        <button class="profilebtn" data-child="child2"><span class="emoji">👦</span><span id="pname2">とうろく する</span></button>
       </div>
+    </div>
+  </section>
+
+  <!-- 1.5 はじめての とうろく（なまえ・むずかしさ） -->
+  <section class="screen" id="screen-setup">
+    <div class="topbar">
+      <button class="iconbtn" id="btnSetupBack">◀️</button>
+      <h2 style="margin:0;">はじめまして！</h2>
+      <span style="width:44px;"></span>
+    </div>
+    <div class="center-flex" style="gap:20px;">
+      <div class="setupavatar" id="setupAvatar">👧</div>
+
+      <div class="setupblock">
+        <p class="setuplabel">なまえを おしえてね</p>
+        <input type="text" id="setupNameInput" class="nameinput" maxlength="10" placeholder="なまえ">
+      </div>
+
+      <div class="setupblock">
+        <p class="setuplabel">むずかしさは どれにする？</p>
+        <div class="difficultygrid" id="difficultyGrid">
+          <button class="diffcard sel" data-level="1"><span class="dicon">🌱</span><span class="dtitle">かんたん</span><span class="ddesc">ほいくえんくらい</span></button>
+          <button class="diffcard" data-level="2"><span class="dicon">🌼</span><span class="dtitle">なれてきた</span><span class="ddesc">しょうがく1ねん</span></button>
+          <button class="diffcard" data-level="3"><span class="dicon">🌟</span><span class="dtitle">ちょっとむずかしい</span><span class="ddesc">しょうがく2ねん</span></button>
+          <button class="diffcard" data-level="4"><span class="dicon">🚀</span><span class="dtitle">ちょうせん</span><span class="ddesc">じしんが あるひと</span></button>
+        </div>
+      </div>
+
+      <button class="nextbtn" id="btnSetupStart" style="width:100%; max-width:320px;">ぼうけんに でかける ▶</button>
     </div>
   </section>
 
@@ -235,6 +303,7 @@
       <span style="width:44px;"></span>
     </div>
     <h2 id="gameTitle">かずのぼうけん</h2>
+    <div class="subgametitle" id="subGameTitle">① かぞえてみよう</div>
     <div class="levelrow" id="levelRow"></div>
 
     <div class="qcard">
@@ -244,6 +313,11 @@
 
     <div class="feedback" id="feedback"></div>
     <div class="optionsgrid" id="optionsGrid"></div>
+    <div class="buildarea hidden" id="buildArea">
+      <div class="buildslots" id="buildSlots"></div>
+      <div class="buildtiles" id="buildTiles"></div>
+      <button class="iconbtn" id="btnBuildReset" title="やりなおす">↺</button>
+    </div>
     <button class="nextbtn hidden" id="btnNext">つぎへ ▶</button>
   </section>
 
@@ -299,6 +373,26 @@
     </div>
   </section>
 
+  <!-- 9. じかん えんちょう -->
+  <section class="screen" id="screen-extend">
+    <div class="topbar">
+      <button class="iconbtn" id="btnExtendCancel">◀️</button>
+      <h2 style="margin:0;">⏰ じかん えんちょう</h2>
+      <span style="width:44px;"></span>
+    </div>
+    <div class="center-flex" style="gap:14px;">
+      <p class="sub">けいさんに こたえたら 5ふん ふえるよ！</p>
+      <div class="qcard">
+        <div class="qvisual" id="extendVisual">23 × 4</div>
+        <div class="qprompt">こたえは なんでしょう？</div>
+      </div>
+      <input type="number" inputmode="numeric" id="extendInput" class="nameinput" style="max-width:220px;" placeholder="こたえを にゅうりょく">
+      <button class="nextbtn" id="btnExtendSubmit" style="max-width:260px;">こたえる</button>
+      <div class="feedback" id="extendFeedback"></div>
+      <p class="sub" id="extendCountInfo"></p>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -310,6 +404,8 @@ var TIME_LIMIT_MS = 15*60*1000;
 var LEVEL_UNLOCK_AT = 3;   // このレベルで何問正解したら次のレベル解放か
 var ROUND_LEN = 5;         // 1回のぼうけんで何問正解したらクリアか
 var STORE_PREFIX = "chiisana_bouken_v1_";
+var EXTEND_MS = 5*60*1000;      // えんちょうで もらえる じかん（5分）
+var MAX_EXTEND_PER_DAY = 2;     // 1日に えんちょうできる かいすう
 
 var TREASURES = [
   {key:"tree",   emoji:"🌳", name:"き"},
@@ -347,18 +443,20 @@ function todayStr(){
 function defaultChild(id){
   return {
     name: id==="child1" ? "おねえちゃん" : "おとうと・いもうと",
+    isSetup: false,
     stars: 0,
     levels: {math:1, word:1, logic:1},
     correctInLevel: {math:0, word:0, logic:0},
     items: [],
     book: {},
-    today: {date: todayStr(), usedMs:0, limitReached:false}
+    today: {date: todayStr(), usedMs:0, limitReached:false, extendCount:0}
   };
 }
 function loadChild(id){
   var raw = null;
   try{ raw = localStorage.getItem(STORE_PREFIX+id); }catch(e){}
   var c;
+  var hadRaw = !!raw;
   if(raw){
     try{ c = JSON.parse(raw); }catch(e){ c = defaultChild(id); }
   } else {
@@ -367,12 +465,15 @@ function loadChild(id){
   // 欠損補完
   var def = defaultChild(id);
   for(var k in def){ if(!(k in c)) c[k] = def[k]; }
+  // 以前のバージョンで作られたデータは、すでに登録済みとして扱う
+  if(hadRaw && c.isSetup === undefined) c.isSetup = true;
   if(!c.levels) c.levels = def.levels;
   if(!c.correctInLevel) c.correctInLevel = def.correctInLevel;
   if(!c.today) c.today = def.today;
+  if(c.today.extendCount === undefined) c.today.extendCount = 0;
   // 日付が変わっていたら今日の利用時間だけリセット（星やアイテムは保持）
   if(c.today.date !== todayStr()){
-    c.today = {date: todayStr(), usedMs:0, limitReached:false};
+    c.today = {date: todayStr(), usedMs:0, limitReached:false, extendCount:0};
   }
   return c;
 }
@@ -387,11 +488,12 @@ function showScreen(id){
   for(var i=0;i<list.length;i++){ list[i].classList.remove("active"); }
   document.getElementById(id).classList.add("active");
   var bar = document.getElementById("timerbar");
-  if(id==="screen-profile" || id==="screen-end"){
+  if(id==="screen-profile" || id==="screen-setup" || id==="screen-end"){
     bar.classList.remove("show");
   } else {
     bar.classList.add("show");
   }
+  document.getElementById("btnExtend").style.display = (id==="screen-extend") ? "none" : "";
 }
 function toast(msg){
   var t = document.getElementById("toast");
@@ -427,6 +529,10 @@ function updateClockDisplay(){
   bar.classList.remove("warn","danger");
   if(rem<=60000) bar.classList.add("danger");
   else if(rem<=180000) bar.classList.add("warn");
+  var extendBtn = document.getElementById("btnExtend");
+  if(state.child){
+    extendBtn.disabled = (state.child.today.extendCount >= MAX_EXTEND_PER_DAY) || state.child.today.limitReached;
+  }
 }
 function timerTick(){
   if(!state.child) return;
@@ -487,14 +593,23 @@ window.addEventListener("pagehide", flushUsedTime);
 window.addEventListener("beforeunload", flushUsedTime);
 
 /* ================= プロフィール選択 ================= */
+var PROFILE_EMOJI = {child1:"👧", child2:"👦"};
+var pendingSetupId = null;
+var pendingSetupLevel = 1;
+
 function initProfileNames(){
-  var c1 = loadChild("child1");
-  var c2 = loadChild("child2");
-  document.getElementById("pname1").textContent = c1.name;
-  document.getElementById("pname2").textContent = c2.name;
+  ["child1","child2"].forEach(function(id, i){
+    var c = loadChild(id);
+    var label = document.getElementById(i===0?"pname1":"pname2");
+    label.textContent = c.isSetup ? c.name : "とうろく する";
+  });
 }
 function selectChild(id){
   var c = loadChild(id);
+  if(!c.isSetup){
+    openSetup(id);
+    return;
+  }
   state.childId = id;
   state.child = c;
   state.warned3 = false;
@@ -515,6 +630,116 @@ document.getElementById("btnSwitchProfile").addEventListener("click", function()
   state.childId = null; state.child = null;
   initProfileNames();
   showScreen("screen-profile");
+});
+
+/* ---- はじめての とうろく（なまえ・むずかしさ） ---- */
+function openSetup(id){
+  pendingSetupId = id;
+  pendingSetupLevel = 1;
+  var c = loadChild(id);
+  document.getElementById("setupAvatar").textContent = PROFILE_EMOJI[id];
+  var input = document.getElementById("setupNameInput");
+  input.value = "";
+  document.querySelectorAll(".diffcard").forEach(function(card){
+    card.classList.toggle("sel", card.getAttribute("data-level")==="1");
+  });
+  showScreen("screen-setup");
+  setTimeout(function(){ input.focus(); }, 200);
+}
+document.querySelectorAll(".diffcard").forEach(function(card){
+  card.addEventListener("click", function(){
+    pendingSetupLevel = parseInt(card.getAttribute("data-level"), 10);
+    document.querySelectorAll(".diffcard").forEach(function(c2){ c2.classList.remove("sel"); });
+    card.classList.add("sel");
+  });
+});
+document.getElementById("btnSetupBack").addEventListener("click", function(){
+  pendingSetupId = null;
+  showScreen("screen-profile");
+});
+document.getElementById("btnSetupStart").addEventListener("click", function(){
+  if(!pendingSetupId) return;
+  var nameVal = document.getElementById("setupNameInput").value.trim();
+  if(nameVal.length===0){
+    toast("なまえを いれてね");
+    document.getElementById("setupNameInput").focus();
+    return;
+  }
+  var c = loadChild(pendingSetupId);
+  c.name = nameVal.slice(0,10);
+  c.isSetup = true;
+  c.levels = {
+    math: initialUnlockCount("math", pendingSetupLevel),
+    word: initialUnlockCount("word", pendingSetupLevel),
+    logic: initialUnlockCount("logic", pendingSetupLevel)
+  };
+  c.correctInLevel = {math:0, word:0, logic:0};
+
+  state.childId = pendingSetupId;
+  state.child = c;
+  state.warned3 = false;
+  state.warned1 = false;
+  saveChild();
+  pendingSetupId = null;
+  startTimerLoop();
+  goHome();
+});
+
+/* ================= じかん えんちょう（2桁×1桁の かけざん） ================= */
+var extendState = {a:0, b:0, prevScreen:"screen-home"};
+
+function openExtend(){
+  if(!state.child || state.child.today.limitReached) return;
+  if(state.child.today.extendCount >= MAX_EXTEND_PER_DAY){
+    toast("きょうは もう えんちょうできないよ。またあしたね！");
+    return;
+  }
+  var activeEl = document.querySelector(".screen.active");
+  extendState.prevScreen = activeEl ? activeEl.id : "screen-home";
+  document.getElementById("extendFeedback").textContent = "";
+  document.getElementById("extendFeedback").className = "feedback";
+  generateExtendProblem();
+  updateExtendCountInfo();
+  showScreen("screen-extend");
+}
+function generateExtendProblem(){
+  extendState.a = Math.floor(Math.random()*90)+10; // 10〜99（2桁）
+  extendState.b = Math.floor(Math.random()*8)+2;   // 2〜9（1桁）
+  document.getElementById("extendVisual").textContent = extendState.a+" × "+extendState.b;
+  var input = document.getElementById("extendInput");
+  input.value = "";
+  setTimeout(function(){ input.focus(); }, 150);
+}
+function updateExtendCountInfo(){
+  var left = MAX_EXTEND_PER_DAY - state.child.today.extendCount;
+  document.getElementById("extendCountInfo").textContent = "きょう あと "+left+"かい えんちょうできるよ";
+}
+function submitExtend(){
+  var raw = document.getElementById("extendInput").value;
+  var val = parseInt(raw, 10);
+  var correct = extendState.a * extendState.b;
+  var fb = document.getElementById("extendFeedback");
+  if(raw !== "" && val === correct){
+    state.child.today.usedMs = Math.max(0, state.child.today.usedMs - EXTEND_MS);
+    state.child.today.extendCount += 1;
+    state.warned3 = false; state.warned1 = false;
+    saveChild();
+    updateClockDisplay();
+    toast("⏰ 5ふん ふえたよ！やったね！");
+    showScreen(extendState.prevScreen || "screen-home");
+  } else {
+    fb.textContent = pick(SOFT_WORDS);
+    fb.className = "feedback soft";
+    generateExtendProblem();
+  }
+}
+document.getElementById("btnExtend").addEventListener("click", openExtend);
+document.getElementById("btnExtendCancel").addEventListener("click", function(){
+  showScreen(extendState.prevScreen || "screen-home");
+});
+document.getElementById("btnExtendSubmit").addEventListener("click", submitExtend);
+document.getElementById("extendInput").addEventListener("keydown", function(e){
+  if(e.key==="Enter"){ e.preventDefault(); submitExtend(); }
 });
 document.getElementById("btnRename").addEventListener("click", function(){
   if(!state.child) return;
@@ -589,8 +814,33 @@ function openChest(){
 }
 
 /* ================= 出題ロジック ================= */
-var GAME_TITLES = {math:"🔢 かずのぼうけん", word:"🔤 ことばのぼうけん", logic:"🧩 ひらめきぼうけん"};
-var LEVEL_ICONS = ["🌱","🌼","🌟","🚀"];
+var CATEGORY_TITLES = {math:"🔢 かずのぼうけん", word:"🔤 ことばのぼうけん", logic:"🧩 ひらめきぼうけん"};
+var GAME_DEFS = {
+  math: [
+    {key:"count", icon:"🔢", title:"かぞえてみよう"},
+    {key:"add",   icon:"➕", title:"たしてみよう"},
+    {key:"sub",   icon:"➖", title:"ひいてみよう"},
+    {key:"shop",  icon:"🛒", title:"おかいもの"}
+  ],
+  word: [
+    {key:"search",    icon:"🔍", title:"ことばをさがそう"},
+    {key:"build",     icon:"🧱", title:"ことばをつくろう"},
+    {key:"shiritori", icon:"🔁", title:"しりとり"},
+    {key:"riddle",    icon:"❓", title:"ことばのなぞなぞ"}
+  ],
+  logic: [
+    {key:"same",     icon:"🟢", title:"おなじものをさがそう"},
+    {key:"diff",     icon:"🟡", title:"ちがうものをさがそう"},
+    {key:"memory",   icon:"🧠", title:"おぼえてね"},
+    {key:"category", icon:"🍽️", title:"なかまはずれ"},
+    {key:"pattern",  icon:"🔮", title:"つぎはなに？"}
+  ]
+};
+function initialUnlockCount(category, diffLevel){
+  var len = GAME_DEFS[category].length;
+  if(diffLevel>=4) return len;
+  return Math.min(diffLevel, len);
+}
 
 var WORDS = [
   {e:"🍎",w:"りんご"},{e:"🐶",w:"いぬ"},{e:"🐱",w:"ねこ"},{e:"🐰",w:"うさぎ"},
@@ -602,18 +852,38 @@ var WORDS = [
   {e:"👒",w:"ぼうし"},{e:"🎁",w:"ぷれぜんと"},{e:"🍉",w:"すいか"},{e:"🐮",w:"うし"},
   {e:"🐷",w:"ぶた"},{e:"🐵",w:"さる"}
 ];
-var SENTENCES = [
-  {t:"ゆうこさんは あかい ぼうしを かぶりました。", q:"ぼうしは なにいろ？", opts:["あか","あお","きいろ"], a:0},
-  {t:"けんたくんは こうえんで ボールで あそびました。", q:"どこで あそんだ？", opts:["いえ","こうえん","がっこう"], a:1},
-  {t:"ねこが さかなを たべました。", q:"だれが たべた？", opts:["いぬ","ねこ","とり"], a:1},
-  {t:"あめが ふったので、かさを さしました。", q:"てんきは どう？", opts:["はれ","あめ","ゆき"], a:1},
-  {t:"みかんは 3こ、りんごは 2こ あります。", q:"どちらが おおい？", opts:["みかん","りんご","おなじ"], a:0},
-  {t:"あさ おきたら、はを みがきます。", q:"あさ なにを する？", opts:["ねる","はみがき","およぐ"], a:1},
-  {t:"いぬが おおきな こえで ワンと なきました。", q:"だれが ないた？", opts:["ねこ","とり","いぬ"], a:2},
-  {t:"よるに なると、そらに つきが でます。", q:"よるに でるのは？", opts:["たいよう","つき","にじ"], a:1},
-  {t:"はなこさんは 3さいの いもうとと あそびました。", q:"いもうとは なんさい？", opts:["2さい","3さい","5さい"], a:1},
-  {t:"きょうは あつかったので、みずを たくさん のみました。", q:"きょうの てんきは？", opts:["さむい","あつい","くもり"], a:1}
+var RIDDLES = [
+  {clue:"あかくて、まるくて、たべられるものは？", answer:"りんご"},
+  {clue:"きいろくて、ながい くだものは なあに？", answer:"ばなな"},
+  {clue:"よるの そらに うかぶ まんまるは？", answer:"つき"},
+  {clue:"よるの そらで きらきら ひかるのは？", answer:"ほし"},
+  {clue:"みずの なかを すいすい およぐのは？", answer:"さかな"},
+  {clue:"わんわんと なく どうぶつは？", answer:"いぬ"},
+  {clue:"にゃーと なく どうぶつは？", answer:"ねこ"},
+  {clue:"あめの ひに さす どうぐは？", answer:"かさ"},
+  {clue:"あたまに かぶる ものは？", answer:"ぼうし"},
+  {clue:"あしに はいて あるく ものは？", answer:"くつ"},
+  {clue:"みちを はしる のりものは？", answer:"くるま"},
+  {clue:"そらを ひらひら とぶ いきものは？", answer:"とり"},
+  {clue:"こうらを せおって のろのろ あるくのは？", answer:"かめ"},
+  {clue:"ながい みみで ぴょんぴょん はねるのは？", answer:"うさぎ"},
+  {clue:"みどりの かわで なかが あかい、なつの くだものは？", answer:"すいか"}
 ];
+var SHOP_ITEMS = [
+  {e:"🍎",name:"りんご",price:10},{e:"🍌",name:"ばなな",price:5},
+  {e:"🍙",name:"おにぎり",price:50},{e:"🍞",name:"ぱん",price:100},
+  {e:"🍉",name:"すいか",price:100},{e:"🎈",name:"ふうせん",price:10},
+  {e:"🍊",name:"みかん",price:5},{e:"🍓",name:"いちご",price:10}
+];
+var CATEGORY_GROUPS = {
+  food: ["🍎","🍌","🍓","🍊","🍉","🍙","🍞"],
+  animals: ["🐶","🐱","🐰","🐻","🐟","🐦","🐸","🐢","🐮","🐷","🐵"],
+  vehicles: ["🚗","🚌","🚀","🚲","🚢"],
+  sky: ["⭐","🌙","☀️","🌈","☁️"]
+};
+var MEMORY_POOL = ["🍎","🚗","⭐","🐶","🎈","🌸","🐟","🍌","🎁","🐰","🍉","🚀"];
+var SHAPE_POOL = ["🔴","🔵","🟡","🟢","🟣","🟠"];
+var EMOJI_POOL = ["🍎","🍓","🍌","⭐","🐶","🎈","🚗","🌼"];
 
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function shuffle(arr){
@@ -634,78 +904,77 @@ function uniqueOptions(correct, poolMin, poolMax, count){
   }
   return shuffle(set);
 }
+function firstKana(w){ return w.charAt(0); }
 
-/* ---- 数のぼうけん ---- */
-var EMOJI_POOL = ["🍎","🍓","🍌","⭐","🐶","🎈","🚗","🌼"];
-function genMath(level){
+/* ---- ① かずのぼうけん ---- */
+function genMathCount(){
   var em = pick(EMOJI_POOL);
-  if(level===1){
-    if(Math.random()<0.5){
-      var n = Math.floor(Math.random()*10)+1;
-      var opts = uniqueOptions(n,1,10,3);
-      return {visual: em.repeat(n), prompt: em+"は なんこ？", options: opts.map(String), correct: String(n)};
-    } else {
-      var n2 = Math.floor(Math.random()*10)+1;
-      var opts2 = uniqueOptions(n2,1,10,3);
-      return {visual: String(n2), prompt: "この かずと おなじ かずの ●を えらぼう", options: opts2.map(function(v){return "●".repeat(v);}), correct: "●".repeat(n2)};
-    }
-  }
-  if(level===2){
-    var a = Math.floor(Math.random()*6)+1;
-    var b = Math.floor(Math.random()*(10-a))+1;
-    var sum = a+b;
-    var opts3 = uniqueOptions(sum,1,10,3);
-    return {visual: em.repeat(a)+" + "+em.repeat(b), prompt: a+" + "+b+" = ？", options: opts3.map(String), correct: String(sum)};
-  }
-  if(level===3){
-    var addSub = Math.random()<0.5;
-    if(addSub){
-      var a3 = Math.floor(Math.random()*11)+5;
-      var b3 = Math.floor(Math.random()*10)+1;
-      var sum3 = a3+b3;
-      var opts4 = uniqueOptions(sum3,5,20,3);
-      return {visual:"📦", prompt: "はこに あめが "+a3+"こ ありました。"+b3+"こ もらいました。ぜんぶで なんこ？", options: opts4.map(String), correct: String(sum3)};
-    } else {
-      var a4 = Math.floor(Math.random()*11)+10;
-      var b4 = Math.floor(Math.random()*9)+1;
-      var diff = a4-b4;
-      var opts5 = uniqueOptions(diff,0,20,3);
-      return {visual:"🎈", prompt: "ふうせんが "+a4+"こ ありました。"+b4+"こ われました。のこりは なんこ？", options: opts5.map(String), correct: String(diff)};
-    }
-  }
-  // level4
-  var pattern = Math.floor(Math.random()*2);
-  if(pattern===0){
-    var a5 = Math.floor(Math.random()*10)+5, b5 = Math.floor(Math.random()*8)+1, c5 = Math.floor(Math.random()*5)+1;
-    var res = a5+b5-c5;
-    if(res<0) res = a5+b5+c5;
-    var opts6 = uniqueOptions(res,0,25,3);
-    return {visual:"🧮", prompt: a5+" + "+b5+" - "+c5+" = ？", options: opts6.map(String), correct: String(res)};
+  if(Math.random()<0.5){
+    var n = Math.floor(Math.random()*10)+1;
+    var opts = uniqueOptions(n,1,10,3);
+    return {visual: em.repeat(n), prompt: em+"は なんこ？", options: opts.map(String), correct: String(n)};
   } else {
-    var a6 = Math.floor(Math.random()*10)+8, b6 = Math.floor(Math.random()*6)+1;
-    var res2 = a6-b6;
-    var opts7 = uniqueOptions(res2,0,20,3);
-    return {visual:"🚌", prompt: "バスに "+a6+"にん のっていました。えきで "+b6+"にん おりました。いま なんにん？", options: opts7.map(String), correct: String(res2)};
+    var n2 = Math.floor(Math.random()*10)+1;
+    var opts2 = uniqueOptions(n2,1,10,3);
+    return {visual: String(n2), prompt: "この かずと おなじ かずの ●を えらぼう", options: opts2.map(function(v){return "●".repeat(v);}), correct: "●".repeat(n2)};
   }
 }
-
-/* ---- ことばのぼうけん ---- */
-function firstKana(w){ return w.charAt(0); }
-function genWord(level){
-  if(level===1){
-    var mode = Math.random()<0.5;
-    var item = pick(WORDS);
-    if(mode){
-      var distractors = shuffle(WORDS.filter(function(x){return x.w!==item.w;})).slice(0,2);
-      var opts = shuffle([item.w, distractors[0].w, distractors[1].w]);
-      return {visual: item.e, prompt: "これは なんて いう？", options: opts, correct: item.w};
-    } else {
-      var others = shuffle(WORDS.filter(function(x){return firstKana(x.w)!==firstKana(item.w);})).slice(0,2);
-      var opts2 = shuffle([firstKana(item.w), firstKana(others[0].w), firstKana(others[1].w)]);
-      return {visual: item.e+"  "+item.w, prompt: "さいしょの もじは どれ？", options: opts2, correct: firstKana(item.w)};
-    }
+function genMathAdd(){
+  var em = pick(EMOJI_POOL);
+  var a = Math.floor(Math.random()*6)+1;
+  var b = Math.floor(Math.random()*(10-a))+1;
+  var sum = a+b;
+  var opts = uniqueOptions(sum,1,10,3);
+  return {visual: em.repeat(a)+" + "+em.repeat(b), prompt: a+" + "+b+" = ？", options: opts.map(String), correct: String(sum)};
+}
+function genMathSub(){
+  var em = pick(EMOJI_POOL);
+  if(Math.random()<0.6){
+    var a = Math.floor(Math.random()*7)+3;
+    var b = Math.floor(Math.random()*a)+1;
+    var res = a-b;
+    var opts = uniqueOptions(res,0,10,3);
+    return {visual: em.repeat(res)+" "+"❌".repeat(b), prompt: a+" - "+b+" = ？", options: opts.map(String), correct: String(res)};
+  } else {
+    var a2 = Math.floor(Math.random()*11)+10;
+    var b2 = Math.floor(Math.random()*9)+1;
+    var diff = a2-b2;
+    var opts2 = uniqueOptions(diff,0,20,3);
+    return {visual:"🎈", prompt: "ふうせんが "+a2+"こ ありました。"+b2+"こ われました。のこりは なんこ？", options: opts2.map(String), correct: String(diff)};
   }
-  if(level===2){
+}
+function genShopping(){
+  var item = pick(SHOP_ITEMS);
+  if(Math.random()<0.5){
+    var coinsAll = [1,5,10,50,100];
+    var correctCoin = item.price;
+    var distractors = shuffle(coinsAll.filter(function(c){return c!==correctCoin;})).slice(0,2);
+    var opts = shuffle([correctCoin, distractors[0], distractors[1]]).map(function(c){return c+"円";});
+    return {visual: item.e+"  "+item.price+"円", prompt: "この "+item.name+"を かうには、どの おかねを えらぶ？", options: opts, correct: correctCoin+"円"};
+  } else {
+    var payOptions = [10,50,100,500].filter(function(p){return p>item.price;});
+    var pay = pick(payOptions.length? payOptions : [item.price+10]);
+    var change = pay - item.price;
+    var opts2 = uniqueOptions(change, 0, pay, 3).map(function(v){return v+"円";});
+    return {visual: item.e+" "+item.name+"（"+item.price+"円）", prompt: pay+"円 はらうと、おつりは いくら？", options: opts2, correct: change+"円"};
+  }
+}
+function genMathGame(key){
+  if(key==="count") return genMathCount();
+  if(key==="add") return genMathAdd();
+  if(key==="sub") return genMathSub();
+  return genShopping();
+}
+
+/* ---- ② ことばのぼうけん ---- */
+function genWordSearch(){
+  var mode = Math.floor(Math.random()*3);
+  if(mode===0){
+    var item = pick(WORDS);
+    var distractors = shuffle(WORDS.filter(function(x){return x.w!==item.w;})).slice(0,2);
+    var opts = shuffle([item.w, distractors[0].w, distractors[1].w]);
+    return {visual: item.e, prompt: "これは なんて いう？", options: opts, correct: item.w};
+  } else if(mode===1){
     var item2 = pick(WORDS);
     var kana = firstKana(item2.w);
     var sameStart = WORDS.filter(function(x){return firstKana(x.w)===kana;});
@@ -713,77 +982,86 @@ function genWord(level){
     var others2 = shuffle(WORDS.filter(function(x){return firstKana(x.w)!==kana;})).slice(0,2);
     var opts3 = shuffle([correctWord.e+" "+correctWord.w, others2[0].e+" "+others2[0].w, others2[1].e+" "+others2[1].w]);
     return {visual: "「"+kana+"」から はじまる ことばは？", prompt:"", options: opts3, correct: correctWord.e+" "+correctWord.w};
+  } else {
+    var item3 = pick(WORDS);
+    var others3 = shuffle(WORDS.filter(function(x){return firstKana(x.w)!==firstKana(item3.w);})).slice(0,2);
+    var opts4 = shuffle([firstKana(item3.w), firstKana(others3[0].w), firstKana(others3[1].w)]);
+    return {visual: item3.e+"  "+item3.w, prompt: "さいしょの もじは どれ？", options: opts4, correct: firstKana(item3.w)};
   }
-  if(level===3){
-    var mode3 = Math.random()<0.5;
-    var item3 = pick(WORDS.filter(function(x){return x.w.length>=2 && x.w.length<=4;}));
-    if(mode3){
-      var chars = item3.w.split("");
-      var scrambled = shuffle(chars).join("");
-      var wrong1 = shuffle(chars).join("");
-      var guard=0;
-      while((wrong1===item3.w) && guard<10){ wrong1 = shuffle(chars).join(""); guard++; }
-      var opts4 = shuffle([item3.w, scrambled===item3.w? wrong1: scrambled, wrong1+"a".repeat(0)]);
-      opts4 = shuffle([item3.w, wrong1, scrambled]);
-      // 重複除去のため簡易処理
-      opts4 = Array.from(new Set(opts4));
-      while(opts4.length<3){ opts4.push(shuffle(chars).join("")); opts4 = Array.from(new Set(opts4)); }
-      return {visual: item3.e+"  ばらばら： "+scrambled, prompt: "ただしい ことばは どれ？", options: shuffle(opts4).slice(0,3), correct: item3.w};
-    } else {
-      var lastKana = item3.w.charAt(item3.w.length-1);
-      var next = WORDS.filter(function(x){return firstKana(x.w)===lastKana;});
-      if(next.length===0){ return genWord(2); }
-      var correctNext = pick(next);
-      var wrongs = shuffle(WORDS.filter(function(x){return firstKana(x.w)!==lastKana;})).slice(0,2);
-      var opts5 = shuffle([correctNext.e+" "+correctNext.w, wrongs[0].e+" "+wrongs[0].w, wrongs[1].e+" "+wrongs[1].w]);
-      return {visual: item3.e+" "+item3.w+" の しりとり", prompt:"つぎに つづく ことばは？", options: opts5, correct: correctNext.e+" "+correctNext.w};
-    }
-  }
-  // level4
-  var s = pick(SENTENCES);
-  var opts6 = s.opts.map(function(o,i){return o;});
-  return {visual: s.t, prompt: s.q, options: shuffleWithAnswer(opts6, s.a).options, correct: shuffleWithAnswer(opts6, s.a).correct};
 }
-function shuffleWithAnswer(opts, ansIndex){
-  var pairs = opts.map(function(o,i){return {o:o, correct:i===ansIndex};});
-  pairs = shuffle(pairs);
-  return {options: pairs.map(function(p){return p.o;}), correct: pairs.filter(function(p){return p.correct;})[0].o};
+function genWordBuild(){
+  var item = pick(WORDS.filter(function(w){return w.w.length>=2 && w.w.length<=4;}));
+  var chars = item.w.split("");
+  var tiles = shuffle(chars);
+  var guard=0;
+  while(tiles.join("")===item.w && chars.length>1 && guard<10){ tiles = shuffle(chars); guard++; }
+  return {mode:"build", visual: item.e, prompt: "えを みて、もじを タップして ことばを つくろう", tiles: tiles, correct: item.w};
+}
+function genWordShiritori(){
+  var item = pick(WORDS.filter(function(w){return w.w.length>=2;}));
+  var lastKana = item.w.charAt(item.w.length-1);
+  var next = WORDS.filter(function(x){return firstKana(x.w)===lastKana && x.w!==item.w;});
+  if(next.length===0){ return genWordSearch(); }
+  var correctNext = pick(next);
+  var wrongs = shuffle(WORDS.filter(function(x){return firstKana(x.w)!==lastKana;})).slice(0,2);
+  var opts = shuffle([correctNext.e+" "+correctNext.w, wrongs[0].e+" "+wrongs[0].w, wrongs[1].e+" "+wrongs[1].w]);
+  return {visual: item.e+" "+item.w+" の しりとり", prompt:"つぎに つづく ことばは？", options: opts, correct: correctNext.e+" "+correctNext.w};
+}
+function genWordRiddle(){
+  var r = pick(RIDDLES);
+  var target = WORDS.filter(function(w){return w.w===r.answer;})[0];
+  var distractors = shuffle(WORDS.filter(function(w){return w.w!==r.answer;})).slice(0,2);
+  var opts = shuffle([target.e+" "+target.w, distractors[0].e+" "+distractors[0].w, distractors[1].e+" "+distractors[1].w]);
+  return {visual: "🤔", prompt: r.clue, options: opts, correct: target.e+" "+target.w};
+}
+function genWordGame(key){
+  if(key==="search") return genWordSearch();
+  if(key==="build") return genWordBuild();
+  if(key==="shiritori") return genWordShiritori();
+  return genWordRiddle();
 }
 
-/* ---- ひらめきぼうけん ---- */
-var SHAPE_POOL = ["🔴","🔵","🟡","🟢","🟣","🟠"];
-function genLogic(level){
-  if(level===1){
-    var target = pick(SHAPE_POOL);
-    var others = shuffle(SHAPE_POOL.filter(function(x){return x!==target;})).slice(0,2);
-    var opts = shuffle([target, others[0], others[1]]);
-    return {visual: target, prompt: "おなじ かたちは どれ？", options: opts, correct: target};
-  }
-  if(level===2){
-    var base = pick(SHAPE_POOL);
-    var odd = pick(SHAPE_POOL.filter(function(x){return x!==base;}));
-    var arr = [base, base, base, base];
-    var idx = Math.floor(Math.random()*4);
-    arr[idx] = odd;
-    return {visual: arr.join("  "), prompt: "ちがう ものは どれ？", options: arr.slice(), correct: odd, grid4:true, distinctIndex:idx};
-  }
-  if(level===3){
-    var seq = [pick(SHAPE_POOL), pick(SHAPE_POOL), pick(SHAPE_POOL)];
-    var visual = seq.join(" → ");
-    var others3 = shuffle(SHAPE_POOL.filter(function(x){return x!==seq[0];})).slice(0,2);
-    var opts3 = shuffle([seq[0], others3[0], others3[1]]);
-    return {visual: visual + "  (かくれた！)", prompt:"さいしょに でてきたのは どれ？", options: opts3, correct: seq[0]};
-  }
-  // level4 規則性
+/* ---- ③ ひらめきぼうけん ---- */
+function genLogicSame(){
+  var target = pick(SHAPE_POOL);
+  var others = shuffle(SHAPE_POOL.filter(function(x){return x!==target;})).slice(0,2);
+  var opts = shuffle([target, others[0], others[1]]);
+  return {visual: target, prompt: "おなじ かたちは どれ？", options: opts, correct: target};
+}
+function genLogicDiff(){
+  var base = pick(SHAPE_POOL);
+  var odd = pick(SHAPE_POOL.filter(function(x){return x!==base;}));
+  var arr = [base, base, base, base];
+  var idx = Math.floor(Math.random()*4);
+  arr[idx] = odd;
+  return {visual: arr.join("  "), prompt: "ちがう ものは どれ？", options: arr.slice(), correct: odd, grid4:true};
+}
+function genLogicMemory(){
+  var shown = shuffle(MEMORY_POOL).slice(0,3);
+  var correctItem = pick(shown);
+  var distractorPool = MEMORY_POOL.filter(function(x){ return shown.indexOf(x)===-1; });
+  var distractors = shuffle(distractorPool).slice(0,2);
+  var opts = shuffle([correctItem, distractors[0], distractors[1]]);
+  return {mode:"memory", visual: shown.join("   "), hiddenVisual:"❓ ❓ ❓", prompt:"さっき あった えは どれ？", options: opts, correct: correctItem};
+}
+function genLogicCategory(){
+  var groupKeys = Object.keys(CATEGORY_GROUPS);
+  var mainKey = pick(groupKeys);
+  var otherKeys = groupKeys.filter(function(k){return k!==mainKey;});
+  var oddKey = pick(otherKeys);
+  var mainItems = shuffle(CATEGORY_GROUPS[mainKey]).slice(0,3);
+  var oddItem = pick(CATEGORY_GROUPS[oddKey]);
+  var arr = shuffle(mainItems.concat([oddItem]));
+  return {visual: arr.join("  "), prompt:"なかまはずれは どれ？", options: arr.slice(), correct: oddItem, grid4:true};
+}
+function genLogicPattern(){
   var mode = Math.floor(Math.random()*2);
   if(mode===0){
     var a = pick(SHAPE_POOL), b = pick(SHAPE_POOL.filter(function(x){return x!==a;}));
     var seq2 = [a,b,a,b];
-    var others4 = shuffle(SHAPE_POOL.filter(function(x){return x!==a;})).slice(0,2);
-    var opts4 = shuffle([a, others4[0]==b?others4[1]:others4[0], b]);
-    opts4 = shuffle(Array.from(new Set([a, b, others4[0]])));
-    while(opts4.length<3){ opts4.push(pick(SHAPE_POOL)); opts4 = Array.from(new Set(opts4)); }
-    return {visual: seq2.join(" ")+" ❓", prompt:"つぎは なに？", options: shuffle(opts4).slice(0,3), correct: a};
+    var others4 = shuffle(SHAPE_POOL.filter(function(x){return x!==a && x!==b;})).slice(0,2);
+    var opts4 = shuffle([a, b, others4[0]]);
+    return {visual: seq2.join(" ")+" ❓", prompt:"つぎは なに？", options: opts4, correct: a};
   } else {
     var a2 = pick(SHAPE_POOL);
     var seq3 = [a2, a2, a2];
@@ -792,19 +1070,32 @@ function genLogic(level){
     return {visual: seq3.join(" ")+" ❓", prompt:"つぎも おなじ かな？", options: opts5, correct: a2};
   }
 }
+function genLogicGame(key){
+  if(key==="same") return genLogicSame();
+  if(key==="diff") return genLogicDiff();
+  if(key==="memory") return genLogicMemory();
+  if(key==="category") return genLogicCategory();
+  return genLogicPattern();
+}
 
-function genQuestion(game, level){
-  if(game==="math") return genMath(level);
-  if(game==="word") return genWord(level);
-  return genLogic(level);
+function genQuestion(category, idx){
+  var def = GAME_DEFS[category][idx-1];
+  if(category==="math") return genMathGame(def.key);
+  if(category==="word") return genWordGame(def.key);
+  return genLogicGame(def.key);
 }
 
 /* ================= ゲーム画面 制御 ================= */
+function updateSubGameTitle(){
+  var def = GAME_DEFS[state.game][state.level-1];
+  document.getElementById("subGameTitle").textContent = def.icon+" "+state.level+"．"+def.title;
+}
 function enterGame(game){
   state.game = game;
   state.level = state.child.levels[game];
   state.roundCorrect = 0;
-  document.getElementById("gameTitle").textContent = GAME_TITLES[game];
+  document.getElementById("gameTitle").textContent = CATEGORY_TITLES[game];
+  updateSubGameTitle();
   renderLevelRow();
   nextQuestion();
   showScreen("screen-game");
@@ -813,33 +1104,58 @@ function enterGame(game){
 function renderLevelRow(){
   var row = document.getElementById("levelRow");
   row.innerHTML = "";
+  var defs = GAME_DEFS[state.game];
   var unlocked = state.child.levels[state.game];
-  for(var lv=1; lv<=4; lv++){
+  defs.forEach(function(def, i){
+    var lv = i+1;
     var chip = document.createElement("button");
     chip.className = "levelchip" + (lv<=unlocked?" unlocked":"") + (lv===state.level?" current":"");
-    chip.textContent = lv<=unlocked ? LEVEL_ICONS[lv-1] : "🔒";
-    (function(lvv){
-      chip.addEventListener("click", function(){
-        if(lvv<=state.child.levels[state.game]){
-          state.level = lvv;
-          state.roundCorrect = 0;
-          renderLevelRow();
-          nextQuestion();
-        }
-      });
-    })(lv);
+    chip.title = def.title;
+    chip.textContent = lv<=unlocked ? def.icon : "🔒";
+    chip.addEventListener("click", function(){
+      if(lv<=state.child.levels[state.game]){
+        state.level = lv;
+        state.roundCorrect = 0;
+        updateSubGameTitle();
+        renderLevelRow();
+        nextQuestion();
+      }
+    });
     row.appendChild(chip);
-  }
+  });
 }
 function nextQuestion(){
+  if(state.memoryTimer){ clearTimeout(state.memoryTimer); state.memoryTimer=null; }
   state.answered = false;
   state.question = genQuestion(state.game, state.level);
-  document.getElementById("qVisual").textContent = state.question.visual;
-  document.getElementById("qPrompt").textContent = state.question.prompt;
   document.getElementById("feedback").textContent = "";
   document.getElementById("feedback").className = "feedback";
   document.getElementById("btnNext").classList.add("hidden");
-  renderOptions();
+  document.getElementById("buildArea").classList.add("hidden");
+  document.getElementById("optionsGrid").classList.remove("hidden");
+  document.getElementById("optionsGrid").innerHTML = "";
+
+  if(state.question.mode==="build"){
+    document.getElementById("qVisual").textContent = state.question.visual;
+    document.getElementById("qPrompt").textContent = state.question.prompt;
+    document.getElementById("optionsGrid").classList.add("hidden");
+    document.getElementById("buildArea").classList.remove("hidden");
+    renderBuildUI();
+  } else if(state.question.mode==="memory"){
+    document.getElementById("qVisual").textContent = state.question.visual;
+    document.getElementById("qPrompt").textContent = "よく みてね…";
+    document.getElementById("optionsGrid").classList.add("hidden");
+    state.memoryTimer = setTimeout(function(){
+      document.getElementById("qVisual").textContent = state.question.hiddenVisual;
+      document.getElementById("qPrompt").textContent = state.question.prompt;
+      document.getElementById("optionsGrid").classList.remove("hidden");
+      renderOptions();
+    }, 2200);
+  } else {
+    document.getElementById("qVisual").textContent = state.question.visual;
+    document.getElementById("qPrompt").textContent = state.question.prompt;
+    renderOptions();
+  }
 }
 function renderOptions(){
   var grid = document.getElementById("optionsGrid");
@@ -853,6 +1169,27 @@ function renderOptions(){
     grid.appendChild(b);
   });
 }
+function awardCorrect(){
+  state.child.stars += 1;
+  document.getElementById("gameStars").textContent = state.child.stars;
+
+  var lv = state.level, g = state.game;
+  var catLen = GAME_DEFS[g].length;
+  state.child.correctInLevel[g] += 1;
+  if(state.child.correctInLevel[g] >= LEVEL_UNLOCK_AT && state.child.levels[g] < catLen && state.child.levels[g] === lv){
+    state.child.levels[g] += 1;
+    state.child.correctInLevel[g] = 0;
+    toast("🌟 つぎの ぼうけんが ひらけたよ！");
+  }
+  saveChild();
+  renderLevelRow();
+
+  state.roundCorrect += 1;
+  document.getElementById("btnNext").classList.remove("hidden");
+  if(state.roundCorrect >= ROUND_LEN){
+    setTimeout(showClear, 900);
+  }
+}
 function onAnswer(opt, btnEl){
   if(state.answered) return;
   var correct = (opt === state.question.correct);
@@ -862,24 +1199,7 @@ function onAnswer(opt, btnEl){
     var fb = document.getElementById("feedback");
     fb.textContent = pick(GOOD_WORDS);
     fb.className = "feedback good";
-    state.child.stars += 1;
-    document.getElementById("gameStars").textContent = state.child.stars;
-
-    var lv = state.level, g = state.game;
-    state.child.correctInLevel[g] += 1;
-    if(state.child.correctInLevel[g] >= LEVEL_UNLOCK_AT && state.child.levels[g] < 4 && state.child.levels[g] === lv){
-      state.child.levels[g] += 1;
-      state.child.correctInLevel[g] = 0;
-      toast("🌟 つぎの レベルが ひらけたよ！");
-    }
-    saveChild();
-    renderLevelRow();
-
-    state.roundCorrect += 1;
-    document.getElementById("btnNext").classList.remove("hidden");
-    if(state.roundCorrect >= ROUND_LEN){
-      setTimeout(showClear, 900);
-    }
+    awardCorrect();
   } else {
     btnEl.classList.add("wrong");
     var fb2 = document.getElementById("feedback");
@@ -889,6 +1209,66 @@ function onAnswer(opt, btnEl){
   }
 }
 document.getElementById("btnNext").addEventListener("click", nextQuestion);
+
+/* ---- ことばをつくろう（タイル組み立て） ---- */
+function renderBuildUI(){
+  state.buildTapped = [];
+  state.buildUsed = state.question.tiles.map(function(){ return false; });
+  updateBuildSlots();
+  var tilesDiv = document.getElementById("buildTiles");
+  tilesDiv.innerHTML = "";
+  state.question.tiles.forEach(function(ch, idx){
+    var b = document.createElement("button");
+    b.className = "optbtn tilebtn";
+    b.textContent = ch;
+    b.addEventListener("click", function(){ onTileTap(idx, b); });
+    tilesDiv.appendChild(b);
+  });
+}
+function updateBuildSlots(){
+  var slotsDiv = document.getElementById("buildSlots");
+  var target = state.question.correct;
+  var html = "";
+  for(var i=0;i<target.length;i++){
+    var ch = state.buildTapped[i]!==undefined ? state.question.tiles[state.buildTapped[i]] : "＿";
+    html += "<span class='buildslot'>"+ch+"</span>";
+  }
+  slotsDiv.innerHTML = html;
+}
+function onTileTap(idx, btnEl){
+  if(state.answered) return;
+  if(state.buildUsed[idx]) return;
+  if(state.buildTapped.length >= state.question.correct.length) return;
+  state.buildTapped.push(idx);
+  state.buildUsed[idx] = true;
+  btnEl.style.visibility = "hidden";
+  updateBuildSlots();
+  if(state.buildTapped.length === state.question.correct.length){
+    checkBuildAnswer();
+  }
+}
+function checkBuildAnswer(){
+  var attempt = state.buildTapped.map(function(idx){ return state.question.tiles[idx]; }).join("");
+  var fb = document.getElementById("feedback");
+  if(attempt === state.question.correct){
+    state.answered = true;
+    fb.textContent = pick(GOOD_WORDS);
+    fb.className = "feedback good";
+    awardCorrect();
+  } else {
+    fb.textContent = pick(SOFT_WORDS);
+    fb.className = "feedback soft";
+    setTimeout(resetBuildAttempt, 700);
+  }
+}
+function resetBuildAttempt(){
+  state.buildTapped = [];
+  state.buildUsed = state.question.tiles.map(function(){ return false; });
+  updateBuildSlots();
+  var tilesDiv = document.getElementById("buildTiles");
+  Array.prototype.forEach.call(tilesDiv.children, function(btn){ btn.style.visibility = "visible"; });
+}
+document.getElementById("btnBuildReset").addEventListener("click", resetBuildAttempt);
 
 /* ================= クリア・たからばこ演出 ================= */
 function showClear(){
