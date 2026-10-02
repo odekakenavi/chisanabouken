@@ -223,6 +223,24 @@
   .pkey.white.c{color:var(--coral-dark);}
   .pkey.black{background:#2a211a; border-radius:0 0 8px 8px; z-index:2; box-shadow:0 4px 0 #000;}
   .pkey.black.on{background:#6a5545; transform:translateY(2px);}
+  .pkey.white{flex-direction:column; justify-content:flex-end; align-items:center; gap:3px; padding-bottom:10px;}
+  .pkey .pname{line-height:1;}
+  .pkey .pdot{line-height:1; font-size:1.1em;}
+  #app:has(#screen-piano.active){max-width:none;}
+  @media (orientation:landscape){
+    #screen-piano{padding:6px 14px 8px;}
+    #screen-piano .sub{display:none;}
+    #screen-piano .topbar{margin-bottom:0;}
+    #screen-piano .pianosize{margin-bottom:6px; padding:6px 12px;}
+    #screen-piano .pianowrap{padding:8px 8px 10px;}
+    #screen-piano .pianosize{max-width:520px; margin-left:auto; margin-right:auto; width:100%;}
+  }
+  .instrow{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;}
+  .instbtn{border:3px solid transparent; background:var(--white); border-radius:16px; padding:8px 12px; font-size:15px; font-weight:800; color:var(--ink); box-shadow:0 4px 0 rgba(0,0,0,.08); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:inherit;}
+  .instbtn .ie{font-size:26px; line-height:1;}
+  .instbtn.sel{background:#FFE9A8; border-color:var(--sun-dark);}
+  .instbtn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.08);}
+  @media (orientation:landscape){ .instrow{margin-bottom:6px; gap:6px;} .instbtn{padding:4px 10px; flex-direction:row; gap:6px;} .instbtn .ie{font-size:20px;} }
   .pianosize{display:flex; align-items:center; gap:10px; background:var(--white); border-radius:18px; padding:10px 14px; margin-bottom:12px; box-shadow:0 4px 0 rgba(0,0,0,.08); font-weight:800;}
   .pianosize input{flex:1; accent-color:var(--coral);}
   .hidden{display:none !important;}
@@ -518,10 +536,6 @@
     position:absolute; top:8px; right:8px; background:rgba(255,255,255,.85); border-radius:999px;
     padding:2px 9px; font-size:11px; font-weight:800; color:var(--ink-soft);
   }
-  .bigbtn.hint::after{
-    content:"👆"; position:absolute; right:12px; bottom:-10px; font-size:34px; pointer-events:none;
-    animation:tapme 1s ease-in-out infinite;
-  }
   @keyframes tapme{0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);}}
   .smallrow .bigbtn{flex-direction:row; justify-content:center; text-align:left; gap:10px; padding:14px 8px; font-size:16px;}
   .smallrow .bigbtn .emoji{font-size:30px;}
@@ -778,7 +792,8 @@
       <span style="width:44px;"></span>
     </div>
     <p class="sub">タップして ひいてみよう！</p>
-    <div class="pianosize"><span>🔍 ちいさい</span><input type="range" id="pianoSize" min="30" max="90" step="1" value="56" aria-label="けんばんの おおきさ"><span>おおきい</span></div>
+    <div class="instrow" id="instRow"></div>
+    <div class="pianosize"><span>🔍 ちいさい</span><input type="range" id="pianoSize" min="30" max="110" step="1" value="56" aria-label="けんばんの おおきさ"><span>おおきい</span></div>
     <div class="pianowrap"><div class="pianokeys" id="pianoKeys"></div></div>
   </section>
 
@@ -3463,31 +3478,147 @@ document.getElementById("btnRevealDone").addEventListener("click", goHome);
 var PIANO_KEY = "chiisana_bouken_piano_size";
 var PIANO_WHITE = [60,62,64,65,67,69,71,72,74,76];
 var PIANO_NAMES = {60:"ド",62:"レ",64:"ミ",65:"ファ",67:"ソ",69:"ラ",71:"シ",72:"ド",74:"レ",76:"ミ"};
+var PIANO_COLORS = {60:["🔴","#FF5B5B"],62:["🟠","#FF9A3D"],64:["🟡","#FFD93D"],65:["🟢","#5FCB6B"],67:["🔵","#4DA3FF"],69:["🟣","#A66BFF"],71:["🟤","#A9745A"],72:["🔴","#FF5B5B"],74:["🟠","#FF9A3D"],76:["🟡","#FFD93D"]};
 var PIANO_BLACK = {0:61,1:63,3:66,4:68,5:70,7:73,8:75};   // 白けん(index)の右がわの黒けん
 var pianoBuilt = false;
+var INSTRUMENTS = [
+  {id:"piano",  e:"🎹", n:"ピアノ"},
+  {id:"violin", e:"🎻", n:"バイオリン"},
+  {id:"flute",  e:"🪈", n:"フルート"},
+  {id:"mbox",   e:"🎁", n:"オルゴール"},
+  {id:"xylo",   e:"🌈", n:"てっきん"},
+  {id:"guitar", e:"🎸", n:"ギター"},
+  {id:"animal", e:"🐾", n:"どうぶつ"},
+  {id:"ghost",  e:"👻", n:"おばけ"}
+];
+var SPECIAL_EMOJI = {
+  animal:["🐱","🐶","🐦","🐑","🐮","🐸","🐷","🐘","🐓","🦆"],
+  ghost:["👻","🦇","🦉","🧛","🕷️","🎃","💀","🧟","🧙","🐺"]
+};
+var pianoInst = "piano";
+/* 小さな音づくり道具：音程の動き(pts)・やわらかさ(lp)・大きさの形を指定 */
+function pVoice(ctx, o){
+  var t0 = ctx.currentTime + (o.delay||0), dur = o.dur;
+  var osc = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+  osc.type = o.type || "sine";
+  o.pts.forEach(function(pt, i){
+    if(i===0) osc.frequency.setValueAtTime(pt[1], t0 + pt[0]*dur);
+    else osc.frequency.linearRampToValueAtTime(pt[1], t0 + pt[0]*dur);
+  });
+  lp.type = o.ftype || "lowpass";
+  lp.Q.value = o.q || 0.7;
+  lp.frequency.setValueAtTime(o.lp, t0);
+  if(o.lp2) lp.frequency.linearRampToValueAtTime(o.lp2, t0 + dur*0.5);
+  var vol = o.vol || 0.2;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + (o.att||0.03));
+  if(o.sus) g.gain.setValueAtTime(vol*o.sus, t0 + dur*0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(lp); lp.connect(g); g.connect(ctx.destination);
+  if(o.vib){   // ビブラート（ゆらぎ）
+    var lfo = ctx.createOscillator(), lg = ctx.createGain();
+    lfo.frequency.value = o.vib[0]; lg.gain.value = o.vib[1];
+    lfo.connect(lg); lg.connect(osc.frequency);
+    lfo.start(t0); lfo.stop(t0 + dur + 0.05);
+  }
+  osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
 function pianoPlay(midi){
   var ctx = getCtx(); if(!ctx) return;
   var f = 440 * Math.pow(2, (midi-69)/12);
+  var wi = PIANO_WHITE.indexOf(midi); if(wi < 0) wi = 0;
+  var V = function(o){ pVoice(ctx, o); };
+  function fl(a, b){ return [[0,a],[1,b]]; }
   try{
-    var t0 = ctx.currentTime;
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.32, t0+0.012);
-    g.gain.exponentialRampToValueAtTime(0.09, t0+0.35);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0+1.5);
-    g.connect(ctx.destination);
-    [[1,"triangle",1],[2,"sine",.35],[3,"sine",.12]].forEach(function(p){
-      var o = ctx.createOscillator(), og = ctx.createGain();
-      o.type = p[1]; o.frequency.setValueAtTime(f*p[0], t0);
-      og.gain.value = p[2];
-      o.connect(og); og.connect(g);
-      o.start(t0); o.stop(t0+1.6);
-    });
+    switch(pianoInst){
+    case "piano":   // やさしいピアノ
+      V({pts:fl(f,f), dur:1.9, lp:1500, vol:.30, att:.025});
+      V({pts:fl(f*2,f*2), dur:1.1, lp:1800, vol:.07, att:.025});
+      V({type:"triangle", pts:fl(f,f), dur:.9, lp:1100, vol:.06, att:.02}); break;
+    case "violin":
+      V({type:"sawtooth", pts:fl(f,f), dur:1.5, lp:2200, q:1.2, vol:.11, att:.14, sus:.8, vib:[5.2,f*.009]});
+      V({type:"triangle", pts:fl(f*2,f*2), dur:1.5, lp:3000, vol:.03, att:.16, vib:[5.2,f*.015]}); break;
+    case "flute":
+      V({pts:fl(f*2,f*2), dur:1.2, lp:2600, vol:.22, att:.08, sus:.85, vib:[5,f*.008]});
+      V({pts:fl(f*4,f*4), dur:1.2, lp:3000, vol:.02, att:.1}); break;
+    case "mbox":    // オルゴール
+      V({pts:fl(f*2,f*2), dur:1.4, lp:5000, vol:.2, att:.004});
+      V({pts:fl(f*6,f*6), dur:.25, lp:7000, vol:.05, att:.004}); break;
+    case "xylo":    // てっきん
+      V({pts:fl(f*2,f*2), dur:.55, lp:6000, vol:.28, att:.003});
+      V({pts:fl(f*6,f*6), dur:.12, lp:8000, vol:.08, att:.002}); break;
+    case "guitar":
+      V({type:"triangle", pts:fl(f,f), dur:1.4, lp:2200, lp2:500, vol:.3, att:.004});
+      V({type:"sawtooth", pts:fl(f,f), dur:.8, lp:1200, lp2:400, vol:.05, att:.004}); break;
+    case "animal": animalSound(ctx, wi); break;
+    case "ghost": ghostSound(ctx, wi); break;
+    }
   }catch(e){}
+}
+function animalSound(ctx, i){
+  var V = function(o){ pVoice(ctx, o); };
+  switch(i){
+  case 0: V({type:"sawtooth", pts:[[0,600],[.25,880],[1,520]], dur:.7, ftype:"bandpass", lp:900, lp2:2400, q:3, vol:.35, att:.06}); break;           // ねこ にゃー
+  case 1: [0,.3].forEach(function(d){ V({type:"sawtooth", pts:[[0,420],[.4,260],[1,200]], dur:.22, delay:d, lp:1300, vol:.3, att:.01}); }); break;   // いぬ わんわん
+  case 2: [0,.11,.26].forEach(function(d,k){ V({pts:[[0,2400+k*150],[1,3200+k*200]], dur:.09, delay:d, lp:6000, vol:.14, att:.01}); }); break;   // ことり
+  case 3: V({type:"sawtooth", pts:[[0,500],[.2,470],[1,430]], dur:.9, ftype:"bandpass", lp:1100, q:2.5, vol:.34, att:.05, vib:[28,25]}); break;     // ひつじ めぇ
+  case 4: V({type:"sawtooth", pts:[[0,120],[.3,130],[1,108]], dur:1.2, lp:700, vol:.3, att:.1, sus:.9, vib:[4,2]}); break;                           // うし もー
+  case 5: [0,.13,.26].forEach(function(d){ V({type:"sawtooth", pts:[[0,230],[1,330]], dur:.09, delay:d, lp:900, vol:.26, att:.01}); }); break;     // かえる ケロケロ
+  case 6: [0,.4].forEach(function(d){ V({type:"sawtooth", pts:[[0,230],[1,170]], dur:.33, delay:d, ftype:"bandpass", lp:600, q:2, vol:.4, att:.02, vib:[22,35]}); }); break;  // ぶた ブヒブヒ
+  case 7: V({type:"sawtooth", pts:[[0,300],[.35,750],[1,420]], dur:1.1, ftype:"bandpass", lp:900, q:2, vol:.35, att:.08, vib:[12,18]}); break;       // ぞう パオーン
+  case 8: V({type:"sawtooth", pts:fl2(500,900), dur:.16, ftype:"bandpass", lp:1500, q:2, vol:.3, att:.01});
+          V({type:"sawtooth", pts:fl2(800,1000), dur:.16, delay:.2, ftype:"bandpass", lp:1500, q:2, vol:.3, att:.01});
+          V({type:"sawtooth", pts:[[0,700],[.5,1100],[1,900]], dur:.6, delay:.42, ftype:"bandpass", lp:1500, q:2, vol:.3, att:.02, vib:[10,25]}); break;   // にわとり コケコッコー
+  case 9: [0,.25].forEach(function(d){ V({type:"sawtooth", pts:fl2(400,300), dur:.18, delay:d, ftype:"bandpass", lp:1200, q:4, vol:.38, att:.01}); }); break;   // あひる グワッ
+  }
+}
+function fl2(a, b){ return [[0,a],[1,b]]; }
+function ghostSound(ctx, i){
+  var V = function(o){ pVoice(ctx, o); };
+  switch(i){
+  case 0: V({type:"triangle", pts:[[0,350],[.3,520],[1,300]], dur:1.5, lp:1200, vol:.28, att:.3, vib:[6,15]}); break;                                    // おばけ うらめしや〜
+  case 1: [0,.2].forEach(function(d){ V({pts:[[0,3500],[.5,5000],[1,3200]], dur:.15, delay:d, lp:9000, vol:.1, att:.01}); }); break;                   // こうもり キー
+  case 2: [0,.5].forEach(function(d){ V({pts:[[0,330],[1,280]], dur:.4, delay:d, lp:800, vol:.3, att:.06}); }); break;                              // ふくろう ホーホー
+  case 3: V({type:"sawtooth", pts:fl2(110,110), dur:1.4, lp:500, vol:.14, att:.2}); V({type:"sawtooth", pts:fl2(116.5,116.5), dur:1.4, lp:500, vol:.14, att:.2}); break;  // ドラキュラ（ふきげんな和音）
+  case 4: for(var k=0;k<7;k++){ V({pts:fl2(1700+k*60,2100), dur:.04, delay:k*.07, lp:6000, vol:.12, att:.004}); } break;                              // くも カサカサ
+  case 5: [0,.13,.26,.39].forEach(function(d){ V({type:"sawtooth", pts:fl2(600,720), dur:.09, delay:d, ftype:"bandpass", lp:1300, q:3, vol:.3, att:.01}); }); break;  // かぼちゃ ヒッヒッヒ
+  case 6: for(var j=0;j<7;j++){ V({type:"square", pts:fl2(300+(j%3)*150,250), dur:.04, delay:j*.06, lp:2000, vol:.1, att:.003}); } break;               // がいこつ カタカタ
+  case 7: V({type:"sawtooth", pts:[[0,140],[1,85]], dur:1.3, lp:400, vol:.3, att:.15, vib:[3,6]}); break;                                               // ゾンビ うぅ〜
+  case 8: for(var m=0;m<5;m++){ V({type:"sawtooth", pts:fl2(500+m*80,620+m*90), dur:.1, delay:m*.11, ftype:"bandpass", lp:1500, q:3, vol:.28, att:.01}); } break;   // まじょ ヒャヒャヒャ
+  case 9: V({pts:[[0,300],[.4,650],[.8,620],[1,400]], dur:1.9, lp:1500, vol:.28, att:.3, vib:[5,10]}); break;                                           // おおかみ アオーン
+  }
+}
+function updatePianoLabels(){
+  var sp = SPECIAL_EMOJI[pianoInst];
+  document.querySelectorAll(".pkey.white").forEach(function(k, i){
+    var d = k.querySelector(".pdot");
+    if(d){ d.textContent = sp ? sp[i] : PIANO_COLORS[PIANO_WHITE[i]][0]; d.style.fontSize = sp ? "1.5em" : ""; }
+  });
+  document.querySelectorAll(".pkey.black").forEach(function(k){ k.style.display = sp ? "none" : ""; });
+}
+function buildInstRow(){
+  var row = document.getElementById("instRow");
+  row.innerHTML = "";
+  INSTRUMENTS.forEach(function(it){
+    var b = document.createElement("button");
+    b.className = "instbtn" + (it.id===pianoInst ? " sel" : "");
+    b.innerHTML = "<span class='ie'>"+it.e+"</span><span>"+it.n+"</span>";
+    b.addEventListener("click", function(){
+      pianoInst = it.id;
+      Array.prototype.forEach.call(row.children, function(c){ c.classList.remove("sel"); });
+      b.classList.add("sel");
+      updatePianoLabels();
+      pianoPlay(60);
+    });
+    row.appendChild(b);
+  });
 }
 function pianoLayout(){
   var kw = parseInt(document.getElementById("pianoSize").value, 10) || 56;
-  var kh = Math.round(kw*3.3), bw = Math.round(kw*0.62), bh = Math.round(kh*0.6);
+  var land = window.innerWidth > window.innerHeight;
+  var kh = Math.round(kw*3.3);
+  if(land) kh = Math.max(90, Math.min(kh, window.innerHeight - 235));
+  var bw = Math.round(kw*0.62), bh = Math.round(kh*0.6);
   var box = document.getElementById("pianoKeys");
   box.style.width = (kw*PIANO_WHITE.length) + "px";
   box.style.height = kh + "px";
@@ -3507,7 +3638,11 @@ function buildPiano(){
     var k = document.createElement("button");
     k.className = "pkey " + cls + (midi%12===0 ? " c" : "");
     k.setAttribute("aria-label", label || "くろけん");
-    if(label) k.textContent = label;
+    if(label){
+      var c = PIANO_COLORS[midi];
+      k.innerHTML = "<span class='pdot'>" + c[0] + "</span><span class='pname'>" + label + "</span>";
+      k.style.borderBottom = "10px solid " + c[1];
+    }
     if(idx !== undefined) k.setAttribute("data-i", idx);
     k.addEventListener("pointerdown", function(e){
       e.preventDefault();
@@ -3530,11 +3665,13 @@ function buildPiano(){
 }
 function openPiano(){
   stopSpeaking();
-  if(!pianoBuilt) buildPiano();
+  if(!pianoBuilt){ buildPiano(); buildInstRow(); }
+  updatePianoLabels();
   showScreen("screen-piano");
   pianoLayout();
 }
 document.getElementById("btnPiano").addEventListener("click", openPiano);
+window.addEventListener("resize", function(){ if(pianoBuilt && document.getElementById("screen-piano").classList.contains("active")) pianoLayout(); });
 document.getElementById("btnPianoHome").addEventListener("click", goHome);
 
 /* ================= 初期化 ================= */
