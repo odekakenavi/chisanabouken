@@ -658,8 +658,6 @@
 
   /* めいろぼうけん */
   .bigbtn.maze{background:#E0F5D0;}
-  .gamegrid .bigbtn.maze{grid-column:1 / -1; flex-direction:row; min-height:0; padding:14px 20px; gap:12px;}
-  .gamegrid .bigbtn.maze .emoji{font-size:36px;}
   .mazeboard{
     position:relative; width:100%; max-width:400px; margin:4px auto 12px; border-radius:22px;
     background:#F3FBE8; box-shadow:0 6px 0 rgba(0,0,0,.1), 0 0 0 5px #fff; touch-action:none; overflow:hidden;
@@ -688,6 +686,34 @@
   .mzarrow.down{grid-column:2; grid-row:2;}
   .mzarrow.right{grid-column:3; grid-row:2;}
   @media (orientation:landscape){ #screen-maze .sub{display:none;} #screen-maze .mazeboard{max-width:min(400px, 48vh);} }
+
+  /* たいこぼうけん */
+  .bigbtn.taiko{background:#FFD9D0;}
+  .tkwrap{position:relative; width:100%; max-width:620px; margin:6px auto 8px; border-radius:22px; overflow:hidden; background:#4A3A2E; box-shadow:0 6px 0 rgba(0,0,0,.12);}
+  .tkwrap canvas{display:block; width:100%;}
+  .tkmsg{
+    position:absolute; inset:0; z-index:3; background:rgba(62,50,40,.82); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:10px; text-align:center;
+  }
+  .tkmsg .wt{font-size:22px; font-weight:800;}
+  .tkmsg .ws{font-size:14px; font-weight:700; opacity:.9; line-height:1.4;}
+  .tkmsg .big{font-size:40px; line-height:1;}
+  .tkmsg .tkbtns{display:flex; gap:10px; width:100%; max-width:420px;}
+  .tkmsg .nextbtn{flex:1; margin:0; padding:12px 8px; font-size:16px;}
+  .tkmsg .nextbtn.alt{background:var(--sun); color:var(--ink); box-shadow:0 5px 0 var(--sun-dark);}
+  .tkstats{display:flex; justify-content:space-between; max-width:620px; width:100%; margin:0 auto 8px; gap:10px;}
+  .tkstats span{flex:1; text-align:center; background:var(--white); border-radius:999px; padding:6px 10px; font-weight:800; font-size:16px; box-shadow:0 3px 0 rgba(0,0,0,.08);}
+  .tkdrums{display:flex; gap:12px; max-width:620px; width:100%; margin:0 auto;}
+  .tkdrum{
+    flex:1; height:116px; border:none; border-radius:28px; color:#fff; font-size:30px; font-weight:900;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; touch-action:manipulation;
+    box-shadow:0 8px 0 rgba(0,0,0,.2);
+  }
+  .tkdrum small{font-size:13px; font-weight:700; opacity:.9;}
+  .tkdrum.don{background:#FF5A4A; box-shadow:0 8px 0 #C93B2D;}
+  .tkdrum.ka{background:#4A9BFF; box-shadow:0 8px 0 #2E73CC;}
+  .tkdrum.on{transform:translateY(6px); box-shadow:0 2px 0 rgba(0,0,0,.25);}
+  @media (orientation:landscape){ #screen-taiko .sub{display:none;} .tkdrum{height:80px;} }
 
   @media (prefers-reduced-motion: reduce){
     .island span.isl, .buildisland span.isl, .homeavatar, .bigemoji, #mzGoal{animation:none;}
@@ -793,6 +819,7 @@
       <button class="bigbtn draw" id="btnDrawHub"><span class="emoji">🖍️</span><span class="txt">おえかきぼうけん<small>かく・ぬる・なぞる</small></span></button>
       <button class="bigbtn piano" id="btnPiano"><span class="emoji">🎹</span><span class="txt">ピアノ<small>ドレミを ひいてみよう</small></span></button>
       <button class="bigbtn maze" id="btnMazeGame"><span class="emoji">🧭</span><span class="txt">めいろぼうけん<small>ゴールまで いこう</small></span></button>
+      <button class="bigbtn taiko" id="btnTaikoGame"><span class="emoji">🥁</span><span class="txt">たいこぼうけん<small>ドン！カッ！</small></span></button>
     </div>
 
     <div class="smallrow">
@@ -846,6 +873,27 @@
       <button class="mzarrow left" data-d="3" aria-label="ひだり">⬅️</button>
       <button class="mzarrow down" data-d="2" aria-label="した">⬇️</button>
       <button class="mzarrow right" data-d="1" aria-label="みぎ">➡️</button>
+    </div>
+  </section>
+
+  <!-- たいこ -->
+  <section class="screen" id="screen-taiko">
+    <div class="topbar">
+      <button class="pillbtn" id="btnTaikoHome">🏠 ホーム</button>
+      <h2 style="margin:0;">🥁 たいこ</h2>
+      <span style="width:44px;"></span>
+    </div>
+    <p class="sub">まるが ○に きたら たたこう！</p>
+    <div class="instrow" id="tkSongs"></div>
+    <div class="instrow" id="tkDiffs"></div>
+    <div class="tkwrap" id="tkWrap">
+      <canvas id="tkCanvas"></canvas>
+      <div class="tkmsg" id="tkMsg"></div>
+    </div>
+    <div class="tkstats"><span>⭐ <b id="tkScore">0</b></span><span>🔥 コンボ <b id="tkCombo">0</b></span></div>
+    <div class="tkdrums">
+      <button class="tkdrum don" data-k="don" aria-label="ドン">ドン！<small>あかい まる</small></button>
+      <button class="tkdrum ka" data-k="ka" aria-label="カッ">カッ！<small>あおい まる</small></button>
     </div>
   </section>
 
@@ -1102,7 +1150,9 @@ var BADGES = [
   {key:"firstdraw",   icon:"🎨", name:"はじめての えかき",     check:function(c){ return (c.drawTotal||0)>=1; }},
   {key:"drawmaster",  icon:"🖼️", name:"えかき めいじん",       check:function(c){ return (c.drawTotal||0)>=10; }},
   {key:"firstmaze",   icon:"🧭", name:"はじめての めいろ",     check:function(c){ return (c.mazeTotal||0)>=1; }},
-  {key:"mazemaster",  icon:"🌀", name:"めいろ めいじん",       check:function(c){ return (c.mazeTotal||0)>=10; }}
+  {key:"mazemaster",  icon:"🌀", name:"めいろ めいじん",       check:function(c){ return (c.mazeTotal||0)>=10; }},
+  {key:"firsttaiko",  icon:"🥁", name:"はじめての たいこ",     check:function(c){ return (c.taikoTotal||0)>=1; }},
+  {key:"taikomaster", icon:"🎖️", name:"たいこの たつじん",     check:function(c){ return (c.taikoTotal||0)>=10; }}
 ];
 function checkBadges(){
   if(!state.child) return;
@@ -1440,7 +1490,7 @@ function bgmSetTrack(name){
 }
 function bgmOnScreen(id){
   if(id === "screen-end"){ bgm.paused = true; bgmStop(); return; }   // 時間切れ画面は静かに
-  if(id === "screen-piano"){ bgm.paused = true; bgmStop(); return; }   // ピアノ中はBGMを止める
+  if(id === "screen-piano" || id === "screen-taiko"){ bgm.paused = true; bgmStop(); return; }   // ピアノ中はBGMを止める
   bgm.paused = false;
   bgmSetTrack(id === "screen-game" || id === "screen-buildgame" || id === "screen-draw" || id === "screen-maze" ? "game" : "home");
   if(bgmOn && audioCtx && !bgm.timer) bgmStart();
@@ -1607,7 +1657,7 @@ function buildAvatarGrid(gridId, current, onPick){
 
 
 /* ================= 「もどる」操作（スマホの戻るボタン・スワイプ） ================= */
-var NAV_BACK_HOME = ["screen-game","screen-buildgame","screen-badges","screen-chest","screen-book","screen-clear","screen-reveal","screen-drawhub","screen-gallery","screen-piano","screen-maze"];
+var NAV_BACK_HOME = ["screen-game","screen-buildgame","screen-badges","screen-chest","screen-book","screen-clear","screen-reveal","screen-drawhub","screen-gallery","screen-piano","screen-maze","screen-taiko"];
 function navPush(id){
   try{
     if(history.state && history.state.s === id) return;
@@ -3963,6 +4013,348 @@ document.getElementById("btnMazeHome").addEventListener("click", goHome);
 window.addEventListener("resize", function(){
   if(document.getElementById("screen-maze").classList.contains("active")) mzFit();
 });
+
+/* ================= たいこぼうけん ================= */
+/* きょくは ぜんぶ 著作権の切れた クラシック。音符は「MIDIばんごう:ながさ(はく)」、r は やすみ */
+var TK_SONGS = [
+  {id:"ode", e:"🎶", n:"よろこび", title:"よろこびのうた", by:"ベートーベン", bpm:108, seq:
+    "64:1 64:1 65:1 67:1 67:1 65:1 64:1 62:1 60:1 60:1 62:1 64:1 64:1.5 62:.5 62:2 "+
+    "62:1 62:1 64:1 60:1 62:1 64:.5 65:.5 64:1 60:1 62:1 64:.5 65:.5 64:1 62:1 60:1 62:1 55:2 "+
+    "64:1 64:1 65:1 67:1 67:1 65:1 64:1 62:1 60:1 60:1 62:1 64:1 62:1.5 60:.5 60:3"},
+  {id:"twinkle", e:"⭐", n:"きらきら", title:"きらきらぼし", by:"モーツァルト", bpm:100, seq:
+    "60:1 60:1 67:1 67:1 69:1 69:1 67:2 65:1 65:1 64:1 64:1 62:1 62:1 60:2 "+
+    "67:1 67:1 65:1 65:1 64:1 64:1 62:2 67:1 67:1 65:1 65:1 64:1 64:1 62:2 "+
+    "60:1 60:1 67:1 67:1 69:1 69:1 67:2 65:1 65:1 64:1 64:1 62:1 62:1 60:3"},
+  {id:"elise", e:"🌹", n:"エリーゼ", title:"エリーゼのために", by:"ベートーベン", bpm:64, seq:
+    "76:.25 75:.25 76:.25 75:.25 76:.25 71:.25 74:.25 72:.25 69:.5 r:.25 60:.25 64:.25 69:.25 "+
+    "71:.5 r:.25 64:.25 68:.25 71:.25 72:.5 r:.25 64:.25 76:.25 75:.25 "+
+    "76:.25 75:.25 76:.25 71:.25 74:.25 72:.25 69:.5 r:.25 60:.25 64:.25 69:.25 "+
+    "71:.5 r:.25 64:.25 72:.25 71:.25 69:1.5 "+
+    "76:.25 75:.25 76:.25 75:.25 76:.25 71:.25 74:.25 72:.25 69:.5 r:.25 60:.25 64:.25 69:.25 "+
+    "71:.5 r:.25 64:.25 68:.25 71:.25 72:.5 r:.25 64:.25 76:.25 75:.25 "+
+    "76:.25 75:.25 76:.25 71:.25 74:.25 72:.25 69:.5 r:.25 60:.25 64:.25 69:.25 "+
+    "71:.5 r:.25 64:.25 72:.25 71:.25 69:3"},
+  {id:"minuet", e:"💃", n:"メヌエット", title:"メヌエット ト長調", by:"ペッツォールト", bpm:100, seq:
+    "74:1 67:.5 69:.5 71:.5 72:.5 74:1 67:1 67:1 76:1 72:.5 74:.5 76:.5 78:.5 79:1 67:1 67:1 "+
+    "72:1 74:.5 72:.5 71:.5 69:.5 71:1 72:.5 71:.5 69:.5 67:.5 66:1 67:.5 69:.5 71:.5 67:.5 67:3 "+
+    "74:1 67:.5 69:.5 71:.5 72:.5 74:1 67:1 67:1 76:1 72:.5 74:.5 76:.5 78:.5 79:1 67:1 67:1 "+
+    "72:1 74:.5 72:.5 71:.5 69:.5 71:1 72:.5 71:.5 69:.5 67:.5 66:1 67:.5 69:.5 71:.5 67:.5 67:3"},
+  /* ---- どうよう（むかしから つたわる、だれのものでもない きょく） ---- */
+  {id:"kaeru", e:"🐸", n:"かえる", title:"かえるのうた", by:"ドイツみんよう", bpm:112, seq:
+    "60:1 62:1 64:1 65:1 64:1 62:1 60:2 64:1 65:1 67:1 69:1 67:1 65:1 64:2 "+
+    "60:2 60:2 60:2 60:2 60:.5 60:.5 62:.5 62:.5 64:.5 64:.5 65:.5 65:.5 64:1 62:1 60:3"},
+  {id:"choucho", e:"🦋", n:"ちょうちょ", title:"ちょうちょう", by:"ドイツみんよう", bpm:104, seq:
+    "67:1 64:1 64:2 65:1 62:1 62:2 60:1 62:1 64:1 65:1 67:1 67:1 67:2 "+
+    "67:1 64:1 64:2 65:1 62:1 62:2 60:1 64:1 67:1 67:1 64:3 "+
+    "62:1 62:1 62:1 62:1 62:1 64:1 65:2 64:1 64:1 64:1 64:1 64:1 65:1 67:2 "+
+    "67:1 64:1 64:2 65:1 62:1 62:2 60:1 64:1 67:1 67:1 60:4"},
+  {id:"mary", e:"🐑", n:"ひつじ", title:"メリーさんのひつじ", by:"アメリカみんよう", bpm:108, seq:
+    "64:1 62:1 60:1 62:1 64:1 64:1 64:2 62:1 62:1 62:2 64:1 67:1 67:2 "+
+    "64:1 62:1 60:1 62:1 64:1 64:1 64:1 64:1 62:1 62:1 64:1 62:1 60:4"},
+  {id:"london", e:"🌉", n:"ロンドン", title:"ロンドンばし", by:"イギリスみんよう", bpm:104, seq:
+    "67:1.5 69:.5 67:1 65:1 64:1 65:1 67:2 62:1 64:1 65:2 64:1 65:1 67:2 "+
+    "67:1.5 69:.5 67:1 65:1 64:1 65:1 67:2 62:2 67:2 64:2 60:2 60:2"}
+];
+var TK_DIFFS = [
+  {id:"easy",   e:"🌱", n:"かんたん", minGap:.5, great:.16, ok:.32},
+  {id:"normal", e:"🌳", n:"ふつう",   minDur:.22, great:.12, ok:.24},
+  {id:"dokadoka", e:"🔥", n:"ドカドカ", dense:true, travel:1.6, great:.09, ok:.19}
+];
+var TK_LEAD = 2.4, TK_TRAVEL = 2.0;
+var tkSongId = "ode", tkDiffId = "easy", tk = null, tkRaf = 0, tkNoiseBuf = null;
+var tkView = {w:0, h:170, c:null};
+
+function tkSong(){ return TK_SONGS.filter(function(x){ return x.id===tkSongId; })[0]; }
+function tkDiff(){ return TK_DIFFS.filter(function(x){ return x.id===tkDiffId; })[0]; }
+function tkNow(){ return (performance.now() - tk.t0) / 1000; }
+
+function tkBuild(){
+  var song = tkSong(), df = tkDiff(), spb = 60/song.bpm, pos = 0, melody = [];
+  song.seq.trim().split(/\s+/).forEach(function(tok){
+    var p = tok.split(":"), m = p[0]==="r" ? 0 : parseInt(p[0],10), b = parseFloat(p[1]);
+    if(m>0) melody.push({m:m, t:TK_LEAD + pos*spb, d:b*spb});
+    pos += b;
+  });
+  var taps;
+  if(df.dense){   // ドカドカ：ぜんぶの おとを たたき、ながい おとは ドコドコと れんだ！
+    var allm = melody.map(function(n){ return n.m; }).sort(function(a,b){ return a-b; });
+    var medAll = allm[Math.floor(allm.length/2)];
+    var step = spb/2, dn = [];
+    melody.forEach(function(n){
+      var cnt = n.d >= spb*.95 ? Math.min(8, Math.max(2, Math.round(n.d/step))) : 1;
+      var first = n.m>medAll ? "ka" : "don";
+      for(var i=0;i<cnt;i++){
+        dn.push({t:n.t + i*step, m:n.m, type: (i%2===0 ? first : (first==="don" ? "ka" : "don")), state:0});
+      }
+    });
+    return {song:song, df:df, spb:spb, melody:melody, notes:dn, endT:TK_LEAD + pos*spb + 1.2,
+            score:0, combo:0, maxCombo:0, great:0, good:0, miss:0, fx:[], running:false, t0:0, master:null};
+  }
+  if(df.minGap){   // かんたん：ならんだ おとの うち、ゆっくり たたける ぶんだけ えらぶ
+    var last = -9;
+    taps = melody.filter(function(n){ if(n.t - last >= df.minGap){ last = n.t; return true; } return false; });
+  } else {
+    taps = melody.filter(function(n){ return n.d >= df.minDur; });
+  }
+  var sorted = taps.map(function(n){ return n.m; }).sort(function(a,b){ return a-b; });
+  var med = sorted[Math.floor(sorted.length/2)];
+  var notes = taps.map(function(n){
+    return {t:n.t, m:n.m, type: (tkDiffId==="easy" ? "don" : (n.m>med ? "ka" : "don")), state:0};
+  });
+  var endT = TK_LEAD + pos*spb + 1.2;
+  return {song:song, df:df, spb:spb, melody:melody, notes:notes, endT:endT,
+          score:0, combo:0, maxCombo:0, great:0, good:0, miss:0, fx:[], running:false, t0:0, master:null};
+}
+
+/* ---- おと ---- */
+function tkVoice(ctx, dest, f, t, d, type, vol){
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t+.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+d);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t+d+.05);
+}
+function tkSchedule(){
+  var ctx = getCtx(); if(!ctx) return;
+  try{
+    var master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
+    tk.master = master;
+    var base = ctx.currentTime + .15;
+    tk.melody.forEach(function(n){
+      var f = 440*Math.pow(2,(n.m-69)/12), d = Math.min(n.d*.95 + .15, 1.7), t = base + n.t;
+      tkVoice(ctx, master, f, t, d, "triangle", .15);
+      tkVoice(ctx, master, f*2, t, d*.6, "sine", .035);
+      tkVoice(ctx, master, f/2, t, d, "sine", .05);
+    });
+  }catch(e){}
+}
+function tkNoise(ctx, t, d, ftype, fr, vol){
+  if(!tkNoiseBuf){
+    var len = Math.floor(ctx.sampleRate*.3);
+    tkNoiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var a = tkNoiseBuf.getChannelData(0);
+    for(var i=0;i<len;i++) a[i] = Math.random()*2-1;
+  }
+  var src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  src.buffer = tkNoiseBuf; f.type = ftype; f.frequency.value = fr;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t+d);
+  src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(t); src.stop(t+d+.02);
+}
+function tkDrumSnd(kind){
+  var ctx = getCtx(); if(!ctx) return;
+  try{
+    var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+    if(kind==="don"){
+      o.type = "sine"; o.frequency.setValueAtTime(190,t); o.frequency.exponentialRampToValueAtTime(62,t+.14);
+      g.gain.setValueAtTime(.75,t); g.gain.exponentialRampToValueAtTime(.001,t+.3);
+      tkNoise(ctx, t, .05, "lowpass", 700, .3);
+    } else {
+      o.type = "triangle"; o.frequency.setValueAtTime(950,t); o.frequency.exponentialRampToValueAtTime(620,t+.07);
+      g.gain.setValueAtTime(.3,t); g.gain.exponentialRampToValueAtTime(.001,t+.1);
+      tkNoise(ctx, t, .07, "bandpass", 2600, .55);
+    }
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+.35);
+  }catch(e){}
+}
+
+/* ---- えが ---- */
+function tkResize(){
+  var cv = document.getElementById("tkCanvas"), wrap = document.getElementById("tkWrap");
+  var w = wrap.clientWidth; if(!w) return;
+  var h = 170, dpr = Math.min(window.devicePixelRatio||1, 2);
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); cv.style.height = h+"px";
+  var c = cv.getContext("2d"); c.setTransform(dpr,0,0,dpr,0,0);
+  tkView = {w:w, h:h, c:c};
+  tkDraw(tk && tk.running ? tkNow() : -1);
+}
+var TK_FONT = '"Hiragino Maru Gothic ProN","Yu Gothic Rounded","Meiryo",sans-serif';
+function tkDraw(gt){
+  var W = tkView.w, H = tkView.h, c = tkView.c; if(!c) return;
+  c.clearRect(0,0,W,H);
+  c.fillStyle = "#4A3A2E"; c.fillRect(0,0,W,H);
+  c.fillStyle = "#6B5444"; c.fillRect(0,H*.2,W,H*.6);
+  c.fillStyle = "#86705B"; c.fillRect(0,H*.2,W,4); c.fillRect(0,H*.8-4,W,4);
+  var hx = W*.17, cy = H*.5, r = H*.22;
+  c.beginPath(); c.arc(hx,cy,r*1.3,0,7); c.fillStyle = "rgba(255,255,255,.14)"; c.fill();
+  c.lineWidth = 4; c.strokeStyle = "rgba(255,255,255,.9)"; c.stroke();
+  if(!tk || gt<0) return;
+  var speed = (W-hx)/(tk.df.travel || TK_TRAVEL);
+  c.textAlign = "center"; c.textBaseline = "middle";
+  for(var i=tk.notes.length-1; i>=0; i--){
+    var n = tk.notes[i];
+    if(n.state===1) continue;
+    var x = hx + (n.t-gt)*speed;
+    if(x < -r || x > W+r) continue;
+    var miss = n.state===2, don = n.type==="don";
+    c.globalAlpha = miss ? .3 : 1;
+    c.beginPath(); c.arc(x,cy,r,0,7); c.fillStyle = miss ? "#999" : (don ? "#FF5A4A" : "#4A9BFF"); c.fill();
+    c.lineWidth = 5; c.strokeStyle = "#fff"; c.stroke();
+    c.beginPath(); c.arc(x,cy,r*.58,0,7); c.fillStyle = miss ? "#bbb" : (don ? "#FF8A7A" : "#7DB8FF"); c.fill();
+    c.fillStyle = "#fff"; c.font = "900 "+Math.round(r*.85)+"px "+TK_FONT;
+    c.fillText(don ? "ド" : "カ", x, cy+1);
+    c.globalAlpha = 1;
+  }
+  var now = performance.now();
+  tk.fx = tk.fx.filter(function(f){ return now - f.t0 < 700; });
+  tk.fx.forEach(function(f){
+    var age = (now - f.t0)/700;
+    c.globalAlpha = 1-age; c.fillStyle = f.col;
+    c.font = "900 "+Math.round(H*.16)+"px "+TK_FONT;
+    c.fillText(f.text, hx, H*.14 - age*6);
+    c.globalAlpha = 1;
+  });
+  if(gt < TK_LEAD - .3){
+    c.fillStyle = "#fff"; c.font = "800 "+Math.round(H*.1)+"px "+TK_FONT;
+    c.fillText(tkDiffId==="easy" ? "まるが ○に きたら タップ！ どっちでも OK" : (tkDiffId==="dokadoka" ? "ドカドカ！ いろを あわせて どんどん たたこう！" : "まるが ○に きたら タップ！ いろを あわせてね"), W/2, H*.9);
+  }
+  c.fillStyle = "#FFCC4D"; c.fillRect(0, H-5, W*Math.max(0,Math.min(1,gt/tk.endT)), 5);
+}
+
+/* ---- ゲームのながれ ---- */
+function tkIdle(){
+  tkStop();
+  tk = null;
+  var song = tkSong();
+  document.getElementById("tkScore").textContent = "0";
+  document.getElementById("tkCombo").textContent = "0";
+  var m = document.getElementById("tkMsg");
+  m.innerHTML = '<div class="wt">'+song.e+' '+song.title+'</div><div class="ws">'+song.by+' さっきょく<br>'+
+    (tkDiffId==="easy" ? 'どっちの たいこを たたいても OK！' : (tkDiffId==="dokadoka" ? 'ドカドカ れんだ！ あかは ドン、あおは カッ！' : 'あかは ドン、あおは カッ！'))+'</div>'+
+    '<div class="tkbtns"><button class="nextbtn" id="tkStart">▶ はじめる</button></div>';
+  m.classList.remove("hidden");
+  document.getElementById("tkStart").addEventListener("click", tkStart);
+  tkDraw(-1);
+}
+function tkStart(){
+  ensureCtx();
+  tk = tkBuild();
+  document.getElementById("tkMsg").classList.add("hidden");
+  document.getElementById("tkScore").textContent = "0";
+  document.getElementById("tkCombo").textContent = "0";
+  tk.t0 = performance.now() + 150;
+  tk.running = true;
+  tkSchedule();
+  cancelAnimationFrame(tkRaf);
+  tkRaf = requestAnimationFrame(tkLoop);
+}
+function tkStop(){
+  cancelAnimationFrame(tkRaf);
+  if(tk){
+    tk.running = false;
+    try{ if(tk.master) tk.master.disconnect(); }catch(e){}
+  }
+}
+function tkFx(text, col){ tk.fx.push({text:text, col:col, t0:performance.now()}); }
+function tkMissNote(n){
+  n.state = 2; tk.miss++; tk.combo = 0; tkFx("おしい", "#FFD9A0");
+}
+function tkLoop(){
+  if(!tk || !tk.running) return;
+  if(!document.getElementById("screen-taiko").classList.contains("active")){ tkStop(); return; }
+  var gt = tkNow();
+  tk.notes.forEach(function(n){
+    if(n.state===0 && gt - n.t > tk.df.ok) tkMissNote(n);
+  });
+  document.getElementById("tkScore").textContent = tk.score;
+  document.getElementById("tkCombo").textContent = tk.combo;
+  tkDraw(gt);
+  if(gt > tk.endT){ tkFinish(); return; }
+  tkRaf = requestAnimationFrame(tkLoop);
+}
+function tkHit(kind){
+  tkDrumSnd(kind); vib(10);
+  if(!tk || !tk.running) return;
+  var gt = tkNow(), df = tk.df, target = null;
+  for(var i=0;i<tk.notes.length;i++){
+    var n = tk.notes[i];
+    if(n.state!==0) continue;
+    if(n.t - gt > df.ok) break;
+    if(Math.abs(n.t - gt) <= df.ok){ target = n; break; }
+  }
+  if(!target) return;
+  if(tkDiffId!=="easy" && target.type !== kind){ tkMissNote(target); tkFx("ちがうよ", "#B8D8FF"); return; }
+  var dt = Math.abs(target.t - gt);
+  target.state = 1;
+  tk.combo++; if(tk.combo > tk.maxCombo) tk.maxCombo = tk.combo;
+  if(dt <= df.great){ tk.great++; tk.score += 100 + Math.min(tk.combo,20)*5; tkFx("すごい！", "#FFE066"); }
+  else { tk.good++; tk.score += 50 + Math.min(tk.combo,20)*2; tkFx("いいね", "#B6F2B0"); }
+  var cx = tkView.w*.17;
+  var r = document.getElementById("tkCanvas").getBoundingClientRect();
+  burstAt(r.left + cx, r.top + tkView.h*.5, ["✨","⭐"], 4);
+}
+function tkFinish(){
+  tkStop();
+  var total = tk.notes.length || 1;
+  var acc = (tk.great + tk.good*.5) / total;
+  var rating = (tk.great + tk.good) === 0 ? 0 : (acc >= .85 ? 3 : (acc >= .6 ? 2 : 1));
+  var c = state.child, gain = 0;
+  if(c && rating > 0){
+    c.taikoTotal = (c.taikoTotal || 0) + 1;
+    var used = c.today.taikoStars || 0;
+    gain = Math.max(0, Math.min(rating, 6 - used));
+    c.today.taikoStars = used + gain;
+    c.stars += gain;
+    saveChild();
+  }
+  var m = document.getElementById("tkMsg");
+  var face = rating===3 ? "🏆" : (rating===2 ? "🎉" : (rating===1 ? "👏" : "🥁"));
+  var word = rating===3 ? "さいこう！" : (rating===2 ? "すごい！" : (rating===1 ? "よくできました！" : "もういっかい やってみよう！"));
+  m.innerHTML = '<div class="big">'+face+'</div><div class="wt">'+word+'</div>'+
+    '<div class="ws">'+(rating ? "⭐".repeat(rating)+"　" : "")+'スコア '+tk.score+'　コンボ '+tk.maxCombo+(gain ? '　⭐ +'+gain : '')+'</div>'+
+    '<div class="tkbtns"><button class="nextbtn" id="tkAgain">🔄 もういっかい</button><button class="nextbtn alt" id="tkOther">🎵 ほかのきょく</button></div>';
+  m.classList.remove("hidden");
+  document.getElementById("tkAgain").addEventListener("click", function(){ SFX.pop(); tkStart(); });
+  document.getElementById("tkOther").addEventListener("click", function(){ SFX.pop(); tkIdle(); });
+  if(rating){ SFX.clear(); confetti(rating*15); }
+  checkBadges();
+}
+function tkBuildRows(){
+  var sr = document.getElementById("tkSongs"); sr.innerHTML = "";
+  TK_SONGS.forEach(function(so){
+    var b = document.createElement("button");
+    b.className = "instbtn" + (so.id===tkSongId ? " sel" : "");
+    b.innerHTML = "<span class='ie'>"+so.e+"</span><span>"+so.n+"</span>";
+    b.addEventListener("click", function(){ tkSongId = so.id; tkBuildRows(); SFX.pop(); tkIdle(); });
+    sr.appendChild(b);
+  });
+  var dr = document.getElementById("tkDiffs"); dr.innerHTML = "";
+  TK_DIFFS.forEach(function(d){
+    var b = document.createElement("button");
+    b.className = "instbtn" + (d.id===tkDiffId ? " sel" : "");
+    b.innerHTML = "<span class='ie'>"+d.e+"</span><span>"+d.n+"</span>";
+    b.addEventListener("click", function(){ tkDiffId = d.id; tkBuildRows(); SFX.pop(); tkIdle(); });
+    dr.appendChild(b);
+  });
+}
+function openTaiko(){
+  stopSpeaking();
+  tkBuildRows();
+  showScreen("screen-taiko");
+  tkResize();
+  tkIdle();
+}
+Array.prototype.forEach.call(document.querySelectorAll(".tkdrum"), function(b){
+  var kind = b.getAttribute("data-k");
+  b.addEventListener("pointerdown", function(e){ e.preventDefault(); b.classList.add("on"); tkHit(kind); });
+  ["pointerup","pointerleave","pointercancel"].forEach(function(ev){
+    b.addEventListener(ev, function(){ b.classList.remove("on"); });
+  });
+});
+document.addEventListener("keydown", function(e){
+  if(e.repeat || !document.getElementById("screen-taiko").classList.contains("active")) return;
+  var map = {f:"don", j:"don", " ":"don", d:"ka", k:"ka"};
+  var k = map[(e.key||"").toLowerCase()];
+  if(k){ e.preventDefault(); tkHit(k); }
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden && tk && tk.running){ tkIdle(); }
+});
+window.addEventListener("resize", function(){
+  if(document.getElementById("screen-taiko").classList.contains("active")) tkResize();
+});
+document.getElementById("btnTaikoGame").addEventListener("click", openTaiko);
+document.getElementById("btnTaikoHome").addEventListener("click", function(){ tkStop(); goHome(); });
 
 /* ================= 初期化 ================= */
 initProfileNames();
