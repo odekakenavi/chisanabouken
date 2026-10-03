@@ -656,8 +656,41 @@
   .galleryempty{text-align:center; color:var(--ink-soft); font-weight:700; padding:30px 10px; line-height:1.7;}
   .gprev{width:100%; border-radius:18px; background:#fff; display:block; box-shadow:0 4px 0 rgba(0,0,0,.08);}
 
+  /* めいろぼうけん */
+  .bigbtn.maze{background:#E0F5D0;}
+  .gamegrid .bigbtn.maze{grid-column:1 / -1; flex-direction:row; min-height:0; padding:14px 20px; gap:12px;}
+  .gamegrid .bigbtn.maze .emoji{font-size:36px;}
+  .mazeboard{
+    position:relative; width:100%; max-width:400px; margin:4px auto 12px; border-radius:22px;
+    background:#F3FBE8; box-shadow:0 6px 0 rgba(0,0,0,.1), 0 0 0 5px #fff; touch-action:none; overflow:hidden;
+  }
+  .mazeboard svg{display:block; width:100%; height:100%;}
+  .mzc{position:absolute; display:flex; align-items:center; justify-content:center; line-height:1; pointer-events:none;}
+  #mzPlayer{transition:left .14s ease, top .14s ease; z-index:3;}
+  #mzGoal{animation:mzbounce 1s ease-in-out infinite; z-index:2;}
+  @keyframes mzbounce{0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-6%) scale(1.1);}}
+  #mzGuide{transition:opacity .3s;}
+  .mzstart{position:absolute; left:4px; top:2px; font-size:11px; font-weight:800; color:var(--sun-dark); pointer-events:none; z-index:2;}
+  .mzwin{
+    position:absolute; inset:0; z-index:5; background:rgba(255,255,255,.9);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; text-align:center;
+  }
+  .mzwin .bigemoji{margin:0;}
+  .mzwin .wt{font-size:24px; font-weight:800;}
+  .mzwin .ws{font-size:16px; font-weight:700; color:var(--ink-soft);}
+  .mzwin .nextbtn{width:100%; max-width:260px; margin:0;}
+  .mzwin .nextbtn.alt{background:var(--sun); color:var(--ink); box-shadow:0 5px 0 var(--sun-dark);}
+  .mazepad{display:grid; grid-template-columns:repeat(3,68px); grid-template-rows:repeat(2,58px); gap:8px; justify-content:center; margin:2px auto 8px;}
+  .mzarrow{border:none; border-radius:18px; background:var(--white); font-size:26px; box-shadow:0 5px 0 rgba(0,0,0,.1); cursor:pointer; color:var(--ink);}
+  .mzarrow:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.1);}
+  .mzarrow.up{grid-column:2; grid-row:1;}
+  .mzarrow.left{grid-column:1; grid-row:2;}
+  .mzarrow.down{grid-column:2; grid-row:2;}
+  .mzarrow.right{grid-column:3; grid-row:2;}
+  @media (orientation:landscape){ #screen-maze .sub{display:none;} #screen-maze .mazeboard{max-width:min(400px, 48vh);} }
+
   @media (prefers-reduced-motion: reduce){
-    .island span.isl, .buildisland span.isl, .homeavatar, .bigemoji{animation:none;}
+    .island span.isl, .buildisland span.isl, .homeavatar, .bigemoji, #mzGoal{animation:none;}
   }
 
 </style>
@@ -759,6 +792,7 @@
       <button class="bigbtn build" id="btnBuildGame"><span class="emoji">🎨</span><span class="txt">つくろうぼうけん<small>じぶんの しまを つくろう</small></span></button>
       <button class="bigbtn draw" id="btnDrawHub"><span class="emoji">🖍️</span><span class="txt">おえかきぼうけん<small>かく・ぬる・なぞる</small></span></button>
       <button class="bigbtn piano" id="btnPiano"><span class="emoji">🎹</span><span class="txt">ピアノ<small>ドレミを ひいてみよう</small></span></button>
+      <button class="bigbtn maze" id="btnMazeGame"><span class="emoji">🧭</span><span class="txt">めいろぼうけん<small>ゴールまで いこう</small></span></button>
     </div>
 
     <div class="smallrow">
@@ -795,6 +829,24 @@
     <div class="instrow" id="instRow"></div>
     <div class="pianosize"><span>🔍 ちいさい</span><input type="range" id="pianoSize" min="30" max="110" step="1" value="56" aria-label="けんばんの おおきさ"><span>おおきい</span></div>
     <div class="pianowrap"><div class="pianokeys" id="pianoKeys"></div></div>
+  </section>
+
+  <!-- めいろ -->
+  <section class="screen" id="screen-maze">
+    <div class="topbar">
+      <button class="pillbtn" id="btnMazeHome">🏠 ホーム</button>
+      <h2 style="margin:0;">🧭 めいろ</h2>
+      <button class="pillbtn" id="btnMazeHint">💡 ヒント</button>
+    </div>
+    <p class="sub">ゆびで スタートから ゴールまで なぞってね！</p>
+    <div class="instrow" id="mazeLevels"></div>
+    <div class="mazeboard" id="mazeBoard"></div>
+    <div class="mazepad">
+      <button class="mzarrow up" data-d="0" aria-label="うえ">⬆️</button>
+      <button class="mzarrow left" data-d="3" aria-label="ひだり">⬅️</button>
+      <button class="mzarrow down" data-d="2" aria-label="した">⬇️</button>
+      <button class="mzarrow right" data-d="1" aria-label="みぎ">➡️</button>
+    </div>
   </section>
 
   <!-- バッジ一覧 -->
@@ -1048,7 +1100,9 @@ var BADGES = [
   {key:"clockmaster", icon:"🕐", name:"とけい博士",           check:function(c){ return (c.roundsCleared.clock||0)>=10; }},
   {key:"islandmaster",icon:"🏝️", name:"島づくり名人",         check:function(c){ return (c.islandPlacedTotal||0)>=20; }},
   {key:"firstdraw",   icon:"🎨", name:"はじめての えかき",     check:function(c){ return (c.drawTotal||0)>=1; }},
-  {key:"drawmaster",  icon:"🖼️", name:"えかき めいじん",       check:function(c){ return (c.drawTotal||0)>=10; }}
+  {key:"drawmaster",  icon:"🖼️", name:"えかき めいじん",       check:function(c){ return (c.drawTotal||0)>=10; }},
+  {key:"firstmaze",   icon:"🧭", name:"はじめての めいろ",     check:function(c){ return (c.mazeTotal||0)>=1; }},
+  {key:"mazemaster",  icon:"🌀", name:"めいろ めいじん",       check:function(c){ return (c.mazeTotal||0)>=10; }}
 ];
 function checkBadges(){
   if(!state.child) return;
@@ -1388,7 +1442,7 @@ function bgmOnScreen(id){
   if(id === "screen-end"){ bgm.paused = true; bgmStop(); return; }   // 時間切れ画面は静かに
   if(id === "screen-piano"){ bgm.paused = true; bgmStop(); return; }   // ピアノ中はBGMを止める
   bgm.paused = false;
-  bgmSetTrack(id === "screen-game" || id === "screen-buildgame" || id === "screen-draw" ? "game" : "home");
+  bgmSetTrack(id === "screen-game" || id === "screen-buildgame" || id === "screen-draw" || id === "screen-maze" ? "game" : "home");
   if(bgmOn && audioCtx && !bgm.timer) bgmStart();
 }
 /* ブラウザは最初のタップまで音を出せないので、最初のタップで開始 */
@@ -1553,7 +1607,7 @@ function buildAvatarGrid(gridId, current, onPick){
 
 
 /* ================= 「もどる」操作（スマホの戻るボタン・スワイプ） ================= */
-var NAV_BACK_HOME = ["screen-game","screen-buildgame","screen-badges","screen-chest","screen-book","screen-clear","screen-reveal","screen-drawhub","screen-gallery","screen-piano"];
+var NAV_BACK_HOME = ["screen-game","screen-buildgame","screen-badges","screen-chest","screen-book","screen-clear","screen-reveal","screen-drawhub","screen-gallery","screen-piano","screen-maze"];
 function navPush(id){
   try{
     if(history.state && history.state.s === id) return;
@@ -3673,6 +3727,242 @@ function openPiano(){
 document.getElementById("btnPiano").addEventListener("click", openPiano);
 window.addEventListener("resize", function(){ if(pianoBuilt && document.getElementById("screen-piano").classList.contains("active")) pianoLayout(); });
 document.getElementById("btnPianoHome").addEventListener("click", goHome);
+
+/* ================= めいろぼうけん ================= */
+var MAZE_LEVELS = [
+  {id:"easy",   e:"🌱", n:"やさしい",   w:4, h:5, extra:2, guide:true},
+  {id:"normal", e:"🌳", n:"ふつう",     w:6, h:7, extra:3, guide:false},
+  {id:"hard",   e:"🚀", n:"むずかしい", w:8, h:9, extra:2, guide:false}
+];
+var MAZE_GOALS = ["🏠","🍎","🎁","🍰","⭐","🏰","🍓","🎈"];
+var MZ_DX = [0,1,0,-1], MZ_DY = [-1,0,1,0];   // 0:うえ 1:みぎ 2:した 3:ひだり
+var SVGNS = "http://www.w3.org/2000/svg";
+var mazeLevel = "easy", mz = null, mzDrag = false, mzHintTimer = null;
+
+function mzGen(w, h, extra){
+  var hw = [], vw = [], seen = [], x, y;
+  for(y=0;y<=h;y++){ hw[y] = []; for(x=0;x<w;x++) hw[y][x] = true; }
+  for(y=0;y<h;y++){ vw[y] = []; seen[y] = []; for(x=0;x<=w;x++) vw[y][x] = true; for(x=0;x<w;x++) seen[y][x] = false; }
+  var stack = [[0,0]]; seen[0][0] = true;
+  while(stack.length){
+    var cur = stack[stack.length-1], cx = cur[0], cy = cur[1], opts = [];
+    if(cx>0   && !seen[cy][cx-1]) opts.push([cx-1,cy,"l"]);
+    if(cx<w-1 && !seen[cy][cx+1]) opts.push([cx+1,cy,"r"]);
+    if(cy>0   && !seen[cy-1][cx]) opts.push([cx,cy-1,"u"]);
+    if(cy<h-1 && !seen[cy+1][cx]) opts.push([cx,cy+1,"d"]);
+    if(!opts.length){ stack.pop(); continue; }
+    var o = opts[Math.floor(Math.random()*opts.length)];
+    if(o[2]==="l") vw[cy][cx] = false;
+    else if(o[2]==="r") vw[cy][cx+1] = false;
+    else if(o[2]==="u") hw[cy][cx] = false;
+    else hw[cy+1][cx] = false;
+    seen[o[1]][o[0]] = true;
+    stack.push([o[0],o[1]]);
+  }
+  // かべを すこし へらして、まよいにくく（ぬけみちを ふやす）
+  var tries = 0;
+  while(extra>0 && tries<300){
+    tries++;
+    if(Math.random()<.5){ x = 1+Math.floor(Math.random()*(w-1)); y = Math.floor(Math.random()*h); if(vw[y][x]){ vw[y][x] = false; extra--; } }
+    else { x = Math.floor(Math.random()*w); y = 1+Math.floor(Math.random()*(h-1)); if(hw[y][x]){ hw[y][x] = false; extra--; } }
+  }
+  return {w:w, h:h, hw:hw, vw:vw};
+}
+function mzOpen(m, x, y, d){
+  if(d===0) return !m.hw[y][x];
+  if(d===1) return !m.vw[y][x+1];
+  if(d===2) return !m.hw[y+1][x];
+  return !m.vw[y][x];
+}
+function mzPath(m, ax, ay, bx, by, maxLen){
+  var key = function(x,y){ return x+","+y; };
+  var prev = {}, dist = {}, q = [[ax,ay]];
+  prev[key(ax,ay)] = null; dist[key(ax,ay)] = 0;
+  while(q.length){
+    var c = q.shift(), cx = c[0], cy = c[1];
+    if(cx===bx && cy===by) break;
+    var cd = dist[key(cx,cy)];
+    if(maxLen && cd>=maxLen) continue;
+    for(var d=0; d<4; d++){
+      if(!mzOpen(m,cx,cy,d)) continue;
+      var nx = cx+MZ_DX[d], ny = cy+MZ_DY[d], k = key(nx,ny);
+      if(k in dist) continue;
+      dist[k] = cd+1; prev[k] = [cx,cy]; q.push([nx,ny]);
+    }
+  }
+  if(!(key(bx,by) in dist)) return null;
+  var path = [], cur = [bx,by];
+  while(cur){ path.unshift(cur); cur = prev[key(cur[0],cur[1])]; }
+  return path;
+}
+function mzPlace(el, x, y){
+  var w = mz.m.w, h = mz.m.h;
+  el.style.left = (x*100/w)+"%"; el.style.top = (y*100/h)+"%";
+  el.style.width = (100/w)+"%"; el.style.height = (100/h)+"%";
+}
+function mzFit(){
+  var board = document.getElementById("mazeBoard");
+  if(!mz || !board.clientWidth) return;
+  var fs = Math.round(board.clientWidth / mz.m.w * 0.6);
+  Array.prototype.forEach.call(board.querySelectorAll(".mzc"), function(el){ el.style.fontSize = fs + "px"; });
+}
+function mzRender(){
+  var m = mz.m, w = m.w, h = m.h, board = document.getElementById("mazeBoard");
+  board.style.aspectRatio = w + " / " + h;
+  var s = '<svg viewBox="0 0 '+(w*100)+' '+(h*100)+'" preserveAspectRatio="none" aria-hidden="true">';
+  s += '<rect x="0" y="0" width="'+(w*100)+'" height="'+(h*100)+'" fill="#F3FBE8"/>';
+  s += '<rect x="0" y="0" width="100" height="100" fill="#FFE9A8"/>';
+  s += '<rect x="'+(mz.gx*100)+'" y="'+(mz.gy*100)+'" width="100" height="100" fill="#FFD9EC"/>';
+  s += '<g id="mzTrail"></g>';
+  s += '<polyline id="mzGuide" points="" fill="none" stroke="#FFA000" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 25" opacity="0"/>';
+  var d = "", x, y;
+  for(y=0;y<=h;y++) for(x=0;x<w;x++) if(m.hw[y][x]) d += "M"+(x*100)+" "+(y*100)+"h100";
+  for(y=0;y<h;y++) for(x=0;x<=w;x++) if(m.vw[y][x]) d += "M"+(x*100)+" "+(y*100)+"v100";
+  s += '<path d="'+d+'" fill="none" stroke="#5DA657" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  s += '<div class="mzstart">スタート</div>';
+  s += '<div class="mzc" id="mzGoal">'+mz.goal+'</div>';
+  s += '<div class="mzc" id="mzPlayer">'+mz.avatar+'</div>';
+  s += '<div class="mzwin hidden" id="mzWin"></div>';
+  board.innerHTML = s;
+  mzPlace(document.getElementById("mzGoal"), mz.gx, mz.gy);
+  mzPlace(document.getElementById("mzPlayer"), mz.x, mz.y);
+  mzFit();
+  mzTrailDot(0, 0);
+  mzUpdateGuide();
+}
+function mzTrailDot(x, y){
+  var g = document.getElementById("mzTrail"); if(!g) return;
+  var c = document.createElementNS(SVGNS, "circle");
+  c.setAttribute("cx", x*100+50); c.setAttribute("cy", y*100+50); c.setAttribute("r", 16);
+  c.setAttribute("fill", "#FFD25E"); c.setAttribute("opacity", ".8");
+  g.appendChild(c);
+}
+function mzUpdateGuide(){
+  var g = document.getElementById("mzGuide"); if(!g || !mz) return;
+  var p = mzPath(mz.m, mz.x, mz.y, mz.gx, mz.gy);
+  if(!p) return;
+  g.setAttribute("points", p.map(function(c){ return (c[0]*100+50)+","+(c[1]*100+50); }).join(" "));
+  g.setAttribute("opacity", mz.hint ? "1" : (mz.lv.guide ? ".5" : "0"));
+}
+function mzNew(){
+  var lv = MAZE_LEVELS.filter(function(L){ return L.id===mazeLevel; })[0] || MAZE_LEVELS[0];
+  var m = mzGen(lv.w, lv.h, lv.extra);
+  clearTimeout(mzHintTimer);
+  mz = {lv:lv, m:m, x:0, y:0, gx:lv.w-1, gy:lv.h-1, seen:{"0,0":1}, done:false, hint:false,
+        avatar: state.child ? getAvatar(state.child, state.childId) : "🧒",
+        goal: MAZE_GOALS[Math.floor(Math.random()*MAZE_GOALS.length)]};
+  mzRender();
+}
+function mzStep(x, y){
+  mz.x = x; mz.y = y;
+  var k = x+","+y;
+  if(!mz.seen[k]){ mz.seen[k] = 1; mzTrailDot(x, y); }
+  mzPlace(document.getElementById("mzPlayer"), x, y);
+  if(x===mz.gx && y===mz.gy) mzWin();
+}
+function mzWalk(path){
+  if(!mz || mz.done || !path || path.length<2) return;
+  for(var i=1;i<path.length;i++){
+    mzStep(path[i][0], path[i][1]);
+    if(mz.done) break;
+  }
+  if(!mz.done){ SFX.pop(); vib(8); }
+  mzUpdateGuide();
+}
+function mzTryMove(d){
+  if(!mz || mz.done) return;
+  if(!mzOpen(mz.m, mz.x, mz.y, d)){ vib(20); return; }
+  mzWalk([[mz.x,mz.y],[mz.x+MZ_DX[d], mz.y+MZ_DY[d]]]);
+}
+function mzCellAt(e){
+  var board = document.getElementById("mazeBoard"), r = board.getBoundingClientRect();
+  var x = Math.floor((e.clientX - r.left) / r.width * mz.m.w);
+  var y = Math.floor((e.clientY - r.top) / r.height * mz.m.h);
+  return {x: Math.max(0, Math.min(mz.m.w-1, x)), y: Math.max(0, Math.min(mz.m.h-1, y))};
+}
+function mzPointer(e){
+  if(!mz || mz.done) return;
+  var c = mzCellAt(e);
+  if(c.x===mz.x && c.y===mz.y) return;
+  var p = mzPath(mz.m, mz.x, mz.y, c.x, c.y, 4);   // ゆびの ちかくまで、かべを よけて すすむ
+  if(p) mzWalk(p);
+}
+function mzWin(){
+  mz.done = true;
+  SFX.clear(); confetti(40); vib([30,50,30]);
+  var c = state.child, gain = 0;
+  if(c){
+    c.mazeTotal = (c.mazeTotal || 0) + 1;
+    if(!c.today.mazeStars) c.today.mazeStars = 0;
+    if(c.today.mazeStars < 3){ c.today.mazeStars++; c.stars++; gain = 1; }
+    saveChild();
+  }
+  setTimeout(function(){
+    var win = document.getElementById("mzWin"); if(!win) return;
+    var hasNext = mz.lv.id !== "hard";
+    win.innerHTML = '<div class="bigemoji">🎉</div><div class="wt">ゴール！ やったね！</div>' +
+      '<div class="ws">' + (gain ? "⭐ +1" : "すごい！") + '</div>' +
+      '<button class="nextbtn" id="mzAgain">🔄 もういっかい</button>' +
+      (hasNext ? '<button class="nextbtn alt" id="mzHarder">⬆️ ちょっと むずかしく</button>' : '');
+    win.classList.remove("hidden");
+    document.getElementById("mzAgain").addEventListener("click", function(){ SFX.pop(); mzNew(); });
+    var hb = document.getElementById("mzHarder");
+    if(hb) hb.addEventListener("click", function(){
+      mazeLevel = mz.lv.id === "easy" ? "normal" : "hard";
+      mzBuildLevels(); SFX.pop(); mzNew();
+    });
+    checkBadges();
+  }, 600);
+}
+function mzBuildLevels(){
+  var row = document.getElementById("mazeLevels");
+  row.innerHTML = "";
+  MAZE_LEVELS.forEach(function(L){
+    var b = document.createElement("button");
+    b.className = "instbtn" + (L.id===mazeLevel ? " sel" : "");
+    b.innerHTML = "<span class='ie'>"+L.e+"</span><span>"+L.n+"</span>";
+    b.addEventListener("click", function(){ mazeLevel = L.id; mzBuildLevels(); SFX.pop(); mzNew(); });
+    row.appendChild(b);
+  });
+}
+function openMaze(){
+  stopSpeaking();
+  mzBuildLevels();
+  showScreen("screen-maze");
+  mzNew();
+}
+(function(){
+  var board = document.getElementById("mazeBoard");
+  board.addEventListener("pointerdown", function(e){
+    if(!mz || mz.done) return;
+    mzDrag = true;
+    try{ board.setPointerCapture(e.pointerId); }catch(err){}
+    mzPointer(e);
+  });
+  board.addEventListener("pointermove", function(e){ if(mzDrag) mzPointer(e); });
+  ["pointerup","pointercancel"].forEach(function(ev){
+    board.addEventListener(ev, function(){ mzDrag = false; });
+  });
+})();
+Array.prototype.forEach.call(document.querySelectorAll(".mzarrow"), function(b){
+  b.addEventListener("click", function(){ mzTryMove(parseInt(b.getAttribute("data-d"), 10)); });
+});
+document.addEventListener("keydown", function(e){
+  if(!document.getElementById("screen-maze").classList.contains("active")) return;
+  var map = {ArrowUp:0, ArrowRight:1, ArrowDown:2, ArrowLeft:3};
+  if(e.key in map){ e.preventDefault(); mzTryMove(map[e.key]); }
+});
+document.getElementById("btnMazeHint").addEventListener("click", function(){
+  if(!mz || mz.done) return;
+  mz.hint = true; mzUpdateGuide(); SFX.sparkle();
+  clearTimeout(mzHintTimer);
+  mzHintTimer = setTimeout(function(){ if(mz){ mz.hint = false; mzUpdateGuide(); } }, 4000);
+});
+document.getElementById("btnMazeGame").addEventListener("click", openMaze);
+document.getElementById("btnMazeHome").addEventListener("click", goHome);
+window.addEventListener("resize", function(){
+  if(document.getElementById("screen-maze").classList.contains("active")) mzFit();
+});
 
 /* ================= 初期化 ================= */
 initProfileNames();
